@@ -985,44 +985,70 @@ def main():
             st.markdown("""
             **Analyze your entire Confluence collection for knowledge gaps.**
             
-            This will generate questions based on all your Confluence content, query them through the knowledge base,
-            and automatically detect gaps. Results will appear below.
+            This will:
+            1. 🔄 **Refresh** - Delete old Confluence data from vector store
+            2. 📥 **Fetch** - Get fresh data from Confluence (all spaces)
+            3. 💾 **Ingest** - Add fresh data to vector store
+            4. 🔍 **Analyze** - Generate questions and detect knowledge gaps
+            
+            Results will appear below.
             """)
         with col2:
             if st.button("🔍 Analyze Confluence Data", type="primary", use_container_width=True):
                 st.session_state["analyze_confluence"] = True
         
         if st.session_state.get("analyze_confluence", False):
-            with st.spinner("Analyzing all Confluence data... This may take a few minutes."):
-                try:
-                    analysis_response = requests.post(
-                        f"{API_BASE_URL}/analyze/confluence/all",
-                        json={"num_questions": 10},  # Reduced to 10 for faster processing
-                        timeout=900  # 15 minutes timeout
-                    )
-                    if analysis_response.status_code == 200:
-                        analysis_data = analysis_response.json()
-                        st.success(f"✅ Analysis completed!")
-                        
-                        # Show summary
-                        col1, col2, col3, col4 = st.columns(4)
-                        with col1:
-                            st.metric("Confluence Pages", analysis_data.get("total_confluence_pages", 0))
-                        with col2:
-                            st.metric("Total Chunks", analysis_data.get("total_confluence_chunks", 0))
-                        with col3:
-                            st.metric("Questions Analyzed", analysis_data.get("questions_analyzed", 0))
-                        with col4:
-                            st.metric("Gaps Detected", analysis_data.get("gaps_detected", 0))
-                        
-                        st.info("💡 **Scroll down to see all detected gaps below!**")
-                        st.session_state["analyze_confluence"] = False
-                    else:
-                        st.error(f"Analysis failed: {analysis_response.text}")
-                        st.session_state["analyze_confluence"] = False
-                except Exception as e:
-                    st.error(f"Error during analysis: {str(e)}")
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            
+            status_text.info("🔄 **Step 1/4:** Refreshing Confluence data (deleting old documents)...")
+            progress_bar.progress(10)
+            
+            try:
+                status_text.info("📥 **Step 2/4:** Fetching fresh data from Confluence...")
+                progress_bar.progress(30)
+                
+                analysis_response = requests.post(
+                    f"{API_BASE_URL}/analyze/confluence/all",
+                    json={"num_questions": 10},  # Reduced to 10 for faster processing
+                    timeout=900  # 15 minutes timeout
+                )
+                
+                progress_bar.progress(50)
+                status_text.info("💾 **Step 3/4:** Ingesting data into vector store...")
+                progress_bar.progress(70)
+                status_text.info("🔍 **Step 4/4:** Analyzing and detecting gaps...")
+                progress_bar.progress(90)
+                
+                if analysis_response.status_code == 200:
+                    progress_bar.progress(100)
+                    status_text.empty()
+                    analysis_data = analysis_response.json()
+                    st.success(f"✅ Analysis completed!")
+                    
+                    # Show summary
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Confluence Pages", analysis_data.get("total_confluence_pages", 0))
+                    with col2:
+                        st.metric("Total Chunks", analysis_data.get("total_confluence_chunks", 0))
+                    with col3:
+                        st.metric("Questions Analyzed", analysis_data.get("questions_analyzed", 0))
+                    with col4:
+                        st.metric("Gaps Detected", analysis_data.get("gaps_detected", 0))
+                    
+                    st.info("💡 **Scroll down to see all detected gaps below!**")
                     st.session_state["analyze_confluence"] = False
+                else:
+                    progress_bar.empty()
+                    status_text.empty()
+                    st.error(f"Analysis failed: {analysis_response.text}")
+                    st.session_state["analyze_confluence"] = False
+            except Exception as e:
+                progress_bar.empty()
+                status_text.empty()
+                st.error(f"Error during analysis: {str(e)}")
+                st.session_state["analyze_confluence"] = False
         
         st.markdown("---")
         

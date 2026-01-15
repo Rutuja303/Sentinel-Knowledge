@@ -219,3 +219,32 @@ class EmbeddingService:
             name="knowledge_base",
             metadata={"hnsw:space": "cosine"}
         )
+    
+    def delete_confluence_documents(self):
+        """Delete all Confluence documents from the collection"""
+        try:
+            # Get all documents
+            total_count = self.collection.count()
+            if total_count == 0:
+                return 0
+            
+            # Get all documents to find Confluence ones
+            all_results = self.collection.get(limit=total_count)
+            
+            # Find all Confluence document IDs
+            confluence_ids = []
+            for i, metadata in enumerate(all_results.get("metadatas", [])):
+                if metadata.get("source") == "confluence":
+                    confluence_ids.append(all_results.get("ids", [])[i])
+            
+            # Delete Confluence documents
+            if confluence_ids:
+                self.collection.delete(ids=confluence_ids)
+                print(f"🗑️  Deleted {len(confluence_ids)} Confluence document chunks")
+                return len(confluence_ids)
+            else:
+                print("ℹ️  No Confluence documents found to delete")
+                return 0
+        except Exception as e:
+            print(f"Error deleting Confluence documents: {e}")
+            return 0

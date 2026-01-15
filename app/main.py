@@ -63,6 +63,9 @@ class ConfluenceIngestRequest(BaseModel):
     space_key: Optional[str] = None
     limit: int = 1000
 
+class AnalyzeConfluenceRequest(BaseModel):
+    num_questions: int = 10
+
 app = FastAPI(
     title="AI Knowledge Gap Detector",
     description="RAG-powered Q&A system with knowledge gap detection",
@@ -521,8 +524,14 @@ async def ingest_single_confluence_page(page_id: str):
 
 
 @app.post("/analyze/confluence/all")
-async def analyze_all_confluence_data(num_questions: int = 15):
-    """Analyze all ingested Confluence data and detect knowledge gaps"""
+async def analyze_all_confluence_data(request: AnalyzeConfluenceRequest = AnalyzeConfluenceRequest()):
+    """Analyze all Confluence data - automatically fetches fresh data, ingests it, then analyzes"""
+    if not confluence_service:
+        raise HTTPException(
+            status_code=503,
+            detail="Confluence integration not configured. Set CONFLUENCE_URL, CONFLUENCE_USERNAME, and CONFLUENCE_API_TOKEN in .env"
+        )
+    
     if embedding_service is None or rag_service is None:
         initialize_services()
         if embedding_service is None or rag_service is None:
@@ -532,13 +541,54 @@ async def analyze_all_confluence_data(num_questions: int = 15):
             )
     
     try:
-        # Get ALL Confluence documents (from all files/pages)
+        # Step 1: Delete existing Confluence documents to refresh
+        print("🔄 Refreshing Confluence data...")
+        deleted_count = embedding_service.delete_confluence_documents()
+        print(f"   Deleted {deleted_count} old Confluence documents")
+        
+        # Step 2: Fetch fresh data from Confluence
+        print("📥 Fetching fresh data from Confluence...")
+        ingested_pages = confluence_service.ingest_all_spaces(limit_per_space=1000)
+        
+        if not ingested_pages:
+            raise HTTPException(
+                status_code=404,
+                detail="No Confluence pages found. Please check your Confluence access and space permissions."
+            )
+        
+        print(f"   Fetched {len(ingested_pages)} pages from Confluence")
+        
+        # Step 3: Prepare and ingest into vector store
+        print("💾 Ingesting fresh data into vector store...")
+        prepared_chunks = confluence_service.prepare_for_embedding(ingested_pages)
+        
+        total_chunks = 0
+        for chunk_data in prepared_chunks:
+            metadatas = [{
+                "source": "confluence",
+                "page_id": chunk_data["page_id"],
+                "title": chunk_data["title"],
+                "url": chunk_data["url"],
+                "space": chunk_data["space"],
+                "space_name": chunk_data["space_name"],
+                "author": chunk_data["author"],
+                "chunk_index": chunk_data["chunk_index"],
+                **chunk_data["metadata"]
+            }]
+            ids = [f"confluence_{chunk_data['page_id']}_{chunk_data['chunk_index']}"]
+            
+            embedding_service.add_documents([chunk_data["chunk"]], metadatas, ids)
+            total_chunks += 1
+        
+        print(f"   Ingested {total_chunks} chunks from {len(ingested_pages)} pages")
+        
+        # Step 4: Get the ingested documents for analysis
         confluence_docs = embedding_service.get_confluence_documents(limit=50000)
         
         if not confluence_docs.get("documents"):
             raise HTTPException(
-                status_code=404,
-                detail="No Confluence data found. Please ingest Confluence pages first."
+                status_code=500,
+                detail="Failed to retrieve ingested Confluence data for analysis."
             )
         
         # Get unique pages info from ALL files
@@ -570,6 +620,8 @@ async def analyze_all_confluence_data(num_questions: int = 15):
         from app.services.question_generator import QuestionGeneratorService
         question_gen = QuestionGeneratorService(embedding_service)
         
+        # Get num_questions from request
+        num_questions = request.num_questions
         # Limit questions to avoid timeout (max 15 for efficiency)
         actual_num_questions = min(num_questions, 15)
         analysis_questions = question_gen.generate_questions_for_confluence(actual_num_questions)
