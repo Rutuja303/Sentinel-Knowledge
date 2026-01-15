@@ -831,24 +831,28 @@ def main():
         
         if gaps:
             for gap in gaps:
-                severity_class = f"gap-{gap['severity']}"
-                severity_emoji = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(gap['severity'], "⚪")
+                # Use Streamlit components with proper formatting
+                gap_type_display = gap['gap_type'].replace('_', ' ')
+                severity_display = gap['severity'].upper()
                 
-                st.markdown(f"""
-                    <div class="gap-card {severity_class}">
-                        <strong style="font-size: 1.1rem;">{severity_emoji} {gap['query']}</strong><br>
-                        <div style="margin-top: 0.75rem; font-size: 0.9rem; color: var(--text-secondary);">
-                            <span class="tech-badge">{gap['gap_type']}</span>
-                            <span style="margin: 0 0.75rem; color: var(--border-color);">•</span>
-                            <span>Occurrences: <strong style="color: var(--text-primary);">{gap['occurrence_count']}</strong></span>
-                            <span style="margin: 0 0.75rem; color: var(--border-color);">•</span>
-                            <span>Severity: <strong style="color: var(--text-primary);">{gap['severity'].upper()}</strong></span>
-                        </div>
-                        <div style="margin-top: 0.75rem; font-size: 0.9rem; color: var(--text-secondary);">
-                            Suggested Topic: {gap.get('suggested_topic', 'N/A')}
-                        </div>
-                    </div>
-                """, unsafe_allow_html=True)
+                # Create a card-like container
+                with st.container():
+                    # Query
+                    st.markdown(f"**{gap['query']}**")
+                    
+                    # Gap type, occurrences, severity
+                    st.text(f"{gap_type_display} • Occurrences: {gap['occurrence_count']} • Severity: {severity_display}")
+                    
+                    # Source page/document
+                    if gap.get('source_page_title'):
+                        st.text(f"📄 Source Page: {gap.get('source_page_title')}")
+                    elif gap.get('source_document'):
+                        st.text(f"📄 Source: {gap.get('source_document')}")
+                    
+                    # Suggested topic
+                    st.text(f"Suggested Topic: {gap.get('suggested_topic', 'N/A')}")
+                    
+                    st.divider()
         else:
             st.info("**No knowledge gaps detected yet.**")
             st.markdown("""
@@ -958,7 +962,69 @@ def main():
     # Gap Analysis
     elif page == "Gap Analysis":
         st.markdown("## Detailed Gap Analysis")
-        st.caption("Comprehensive analysis of detected knowledge gaps with advanced filtering and export capabilities")
+        st.caption("Comprehensive analysis of detected knowledge gaps across your entire document collection")
+        
+        # Info box explaining collection-wide analysis
+        st.info("""
+        **📊 Collection-Wide Gap Analysis**
+        
+        This section analyzes knowledge gaps across your **entire document collection**, including:
+        - All ingested Confluence pages
+        - All uploaded documents (PDF, DOCX, TXT, Markdown)
+        - Questions asked through the Query Interface
+        
+        Gaps are automatically detected when queries cannot be answered well from your knowledge base.
+        Each gap shows which document or page it originated from (if available).
+        """)
+        
+        # Button to analyze all Confluence data
+        st.markdown("---")
+        st.markdown("### Analyze All Confluence Data")
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            st.markdown("""
+            **Analyze your entire Confluence collection for knowledge gaps.**
+            
+            This will generate questions based on all your Confluence content, query them through the knowledge base,
+            and automatically detect gaps. Results will appear below.
+            """)
+        with col2:
+            if st.button("🔍 Analyze Confluence Data", type="primary", use_container_width=True):
+                st.session_state["analyze_confluence"] = True
+        
+        if st.session_state.get("analyze_confluence", False):
+            with st.spinner("Analyzing all Confluence data... This may take a few minutes."):
+                try:
+                    analysis_response = requests.post(
+                        f"{API_BASE_URL}/analyze/confluence/all",
+                        json={"num_questions": 10},  # Reduced to 10 for faster processing
+                        timeout=900  # 15 minutes timeout
+                    )
+                    if analysis_response.status_code == 200:
+                        analysis_data = analysis_response.json()
+                        st.success(f"✅ Analysis completed!")
+                        
+                        # Show summary
+                        col1, col2, col3, col4 = st.columns(4)
+                        with col1:
+                            st.metric("Confluence Pages", analysis_data.get("total_confluence_pages", 0))
+                        with col2:
+                            st.metric("Total Chunks", analysis_data.get("total_confluence_chunks", 0))
+                        with col3:
+                            st.metric("Questions Analyzed", analysis_data.get("questions_analyzed", 0))
+                        with col4:
+                            st.metric("Gaps Detected", analysis_data.get("gaps_detected", 0))
+                        
+                        st.info("💡 **Scroll down to see all detected gaps below!**")
+                        st.session_state["analyze_confluence"] = False
+                    else:
+                        st.error(f"Analysis failed: {analysis_response.text}")
+                        st.session_state["analyze_confluence"] = False
+                except Exception as e:
+                    st.error(f"Error during analysis: {str(e)}")
+                    st.session_state["analyze_confluence"] = False
+        
+        st.markdown("---")
         
         # Filters
         with st.expander("Filters & Search", expanded=True):
@@ -976,10 +1042,10 @@ def main():
             
             search_query = st.text_input("Search", placeholder="Search gaps by query text...", label_visibility="collapsed")
         
-        # Fetch and filter gaps
+        # Fetch and filter gaps from entire collection
         all_gaps = fetch_gaps(limit=1000)
         
-        if all_gaps:
+        if all_gaps and len(all_gaps) > 0:
             df = pd.DataFrame(all_gaps)
             
             # Apply filters
@@ -1025,8 +1091,19 @@ def main():
                 csv = df.to_csv(index=False).encode('utf-8')
                 st.download_button("Export CSV", csv, "knowledge_gaps.csv", "text/csv", use_container_width=True)
             
-            display_df = df[["query", "gap_type", "severity", "occurrence_count", "priority_score", "suggested_topic"]].copy()
-            display_df.columns = ["Query", "Type", "Severity", "Occurrences", "Priority", "Suggested Topic"]
+            # Add source file/page column
+            def get_source_info(row):
+                if row.get('source_page_title'):
+                    return row['source_page_title']
+                elif row.get('source_document'):
+                    return row['source_document']
+                else:
+                    return "Unknown"
+            
+            df["source_file"] = df.apply(get_source_info, axis=1)
+            
+            display_df = df[["query", "gap_type", "severity", "occurrence_count", "priority_score", "suggested_topic", "source_file"]].copy()
+            display_df.columns = ["Query", "Type", "Severity", "Occurrences", "Priority", "Suggested Topic", "Source File/Page"]
             
             st.dataframe(
                 display_df,
@@ -1052,6 +1129,8 @@ def main():
                     )
                     fig.update_layout(showlegend=True, margin=dict(l=20, r=20, t=20, b=20), height=350)
                     st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.info("No gap type data available")
             
             with col2:
                 st.markdown("#### Top Queries by Priority")
@@ -1084,6 +1163,10 @@ def main():
                         with col2:
                             st.markdown(f"**Suggested Topic:** {gap.get('suggested_topic', 'N/A')}")
                         
+                        # Show source file/page information
+                        source_info = gap.get('source_page_title') or gap.get('source_document') or 'Unknown'
+                        st.markdown(f"**📄 Source File/Page:** {source_info}")
+                        
                         st.markdown("**Recommended Action:**")
                         if gap['gap_type'] == 'empty_retrieval':
                             st.info(f"**Create documentation** for: {gap.get('suggested_topic', gap['query'])}")
@@ -1094,8 +1177,45 @@ def main():
             else:
                 st.success("**No high-priority gaps** requiring immediate attention!")
         else:
-            st.info("**No gaps found** with the selected filters.")
-            st.markdown("Try:\n- Adjusting your filters\n- Asking more questions to generate gap data")
+            st.warning("**No knowledge gaps detected yet.**")
+            st.markdown("""
+            **To generate gap analysis for your Confluence data:**
+            
+            1. **Go to Confluence section** - Click "Confluence" in the sidebar
+            2. **Click "Analyze All Confluence Data for Gaps"** - This will analyze your entire Confluence collection
+            3. **View results here** - All detected gaps will appear in this section
+            
+            **Or generate gaps by querying:**
+            - Use the Query Interface to ask questions
+            - Gaps are detected automatically when:
+              - Questions can't be answered well (low similarity scores)
+              - No relevant documents are found
+              - Answers contain uncertainty phrases
+              - Same questions are asked repeatedly
+            
+            **Once you have gaps, they will appear here with:**
+            - Query that revealed the gap
+            - Gap type and severity
+            - Source document/page (if available)
+            - Suggested documentation topics
+            """)
+            
+            # Show statistics even if no gaps
+            try:
+                stats_response = requests.get(f"{API_BASE_URL}/gaps/stats", timeout=5)
+                if stats_response.status_code == 200:
+                    stats = stats_response.json()
+                    st.markdown("### Current Statistics")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Total Queries", stats.get("total_queries", 0))
+                    with col2:
+                        st.metric("Total Gaps", stats.get("total_gaps", 0))
+                    with col3:
+                        gap_rate = stats.get("gap_rate", 0) * 100
+                        st.metric("Gap Rate", f"{gap_rate:.1f}%")
+            except:
+                pass
     
     # Confluence Integration Page
     elif page == "Confluence":
@@ -1156,8 +1276,97 @@ def main():
                                         st.markdown(f"**Pages in this space:** {len(pages)}")
                                         
                                         if pages:
-                                            for page in pages[:10]:  # Show first 10
-                                                st.markdown(f"• **{page.get('title', 'Untitled')}**")
+                                            # Create a selectbox for page selection
+                                            page_options = {f"{p.get('title', 'Untitled')} (ID: {p.get('id')})": p.get('id') for p in pages}
+                                            selected_page_label = st.selectbox(
+                                                "Select a page to view full content:",
+                                                options=list(page_options.keys()),
+                                                key=f"page_select_{space_key}",
+                                                index=0 if pages else None
+                                            )
+                                            
+                                            if selected_page_label:
+                                                selected_page_id = page_options[selected_page_label]
+                                                
+                                                # Button to fetch and display full content
+                                                if st.button(f"View Full Content", key=f"view_content_{space_key}_{selected_page_id}"):
+                                                    st.session_state[f"viewing_page_{selected_page_id}"] = True
+                                                
+                                                # Display full content if button clicked
+                                                if st.session_state.get(f"viewing_page_{selected_page_id}", False):
+                                                    with st.spinner("Loading page content..."):
+                                                        try:
+                                                            page_response = requests.get(
+                                                                f"{API_BASE_URL}/confluence/pages/{selected_page_id}",
+                                                                timeout=15
+                                                            )
+                                                            if page_response.status_code == 200:
+                                                                page_data = page_response.json()
+                                                                
+                                                                # Display page metadata
+                                                                st.markdown("---")
+                                                                st.markdown(f"### {page_data.get('title', 'Untitled')}")
+                                                                
+                                                                col1, col2, col3 = st.columns(3)
+                                                                with col1:
+                                                                    st.caption(f"**Space:** {page_data.get('space_name', 'Unknown')}")
+                                                                with col2:
+                                                                    st.caption(f"**Author:** {page_data.get('author', 'Unknown')}")
+                                                                with col3:
+                                                                    st.caption(f"**Version:** {page_data.get('version', 'N/A')}")
+                                                                
+                                                                if page_data.get('last_modified'):
+                                                                    st.caption(f"**Last Modified:** {page_data.get('last_modified')}")
+                                                                
+                                                                if page_data.get('url'):
+                                                                    st.markdown(f"[🔗 Open in Confluence]({page_data.get('url')})")
+                                                                
+                                                                st.markdown("---")
+                                                                
+                                                                # Display full content
+                                                                st.markdown("### Full Content")
+                                                                content = page_data.get('content', '')
+                                                                if content:
+                                                                    # Display content in a scrollable container (not an expander to avoid nesting)
+                                                                    # Use markdown with proper escaping
+                                                                    import html
+                                                                    escaped_content = html.escape(content)
+                                                                    st.markdown(
+                                                                        f"""
+                                                                        <div style="
+                                                                            max-height: 500px;
+                                                                            overflow-y: auto;
+                                                                            padding: 1rem;
+                                                                            background-color: {'#ffffff' if st.session_state.theme == 'light' else '#1e293b'};
+                                                                            border: 1px solid {'#e2e8f0' if st.session_state.theme == 'light' else '#334155'};
+                                                                            border-radius: 8px;
+                                                                            margin: 1rem 0;
+                                                                        ">
+                                                                            <div style="white-space: pre-wrap; line-height: 1.6; color: {'#1e293b' if st.session_state.theme == 'light' else '#f1f5f9'};">
+                                                                                {escaped_content}
+                                                                            </div>
+                                                                        </div>
+                                                                        """,
+                                                                        unsafe_allow_html=True
+                                                                    )
+                                                                    
+                                                                    # Show content stats
+                                                                    word_count = len(content.split())
+                                                                    char_count = len(content)
+                                                                    st.caption(f"Content: {word_count} words, {char_count} characters")
+                                                                else:
+                                                                    st.info("This page has no content.")
+                                                            else:
+                                                                st.error(f"Could not load page content: {page_response.status_code}")
+                                                                st.text(page_response.text[:500])
+                                                        except Exception as e:
+                                                            st.error(f"Error loading page content: {str(e)}")
+                                            
+                                            # Also show list of all pages
+                                            st.markdown("---")
+                                            st.markdown(f"**All Pages ({len(pages)}):**")
+                                            for page in pages[:20]:  # Show first 20
+                                                st.markdown(f"• **{page.get('title', 'Untitled')}** (ID: `{page.get('id')}`)")
                                                 if page.get('url'):
                                                     st.caption(f"   [View in Confluence]({page.get('url')})")
                                         else:

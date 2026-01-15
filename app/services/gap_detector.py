@@ -46,7 +46,10 @@ class GapDetectorService:
         answer: str,
         similarity_scores: List[float],
         retrieved_documents: List[str],
-        user_id: Optional[str] = None
+        user_id: Optional[str] = None,
+        source_page_id: Optional[str] = None,
+        source_page_title: Optional[str] = None,
+        source_document: Optional[str] = None
     ) -> Optional[KnowledgeGap]:
         """Detect if a query represents a knowledge gap"""
         
@@ -121,7 +124,10 @@ class GapDetectorService:
                     first_detected=datetime.now(),
                     last_detected=datetime.now(),
                     users_affected=[user_id] if user_id else [],
-                    suggested_topic=self._suggest_topic(query)
+                    suggested_topic=self._suggest_topic(query),
+                    source_page_id=source_page_id,
+                    source_page_title=source_page_title,
+                    source_document=source_document
                 )
                 self.gaps[gap_id] = gap
             

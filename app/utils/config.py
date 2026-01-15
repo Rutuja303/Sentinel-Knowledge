@@ -12,7 +12,7 @@ class Config:
     
     # Ollama Configuration
     OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-    OLLAMA_LLM_MODEL = os.getenv("OLLAMA_LLM_MODEL", "llama3.1:8b")
+    OLLAMA_LLM_MODEL = os.getenv("OLLAMA_LLM_MODEL", "gemma3:latest")  # Default to gemma3:latest, or use llama3.1:8b if available
     OLLAMA_EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "nomic-embed-text")
     
     # OpenAI Configuration (fallback/optional)
@@ -23,6 +23,10 @@ class Config:
     # Backward compatibility
     EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", OLLAMA_EMBEDDING_MODEL if LLM_PROVIDER == "ollama" else OPENAI_EMBEDDING_MODEL)
     LLM_MODEL = os.getenv("LLM_MODEL", OLLAMA_LLM_MODEL if LLM_PROVIDER == "ollama" else OPENAI_LLM_MODEL)
+    
+    # Embedding Storage (chromadb or memory)
+    EMBEDDING_STORAGE = os.getenv("EMBEDDING_STORAGE", "chromadb").lower()  # "chromadb" or "memory"
+    EMBEDDING_CACHE_PATH = os.getenv("EMBEDDING_CACHE_PATH", "./data/embeddings_cache")
     
     # Paths
     CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "./chroma_db")

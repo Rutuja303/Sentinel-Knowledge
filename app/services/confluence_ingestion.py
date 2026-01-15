@@ -48,20 +48,48 @@ class ConfluenceIngestionService:
     def get_page_content(self, page_id: str) -> Dict:
         """Get content of a specific Confluence page"""
         try:
-            page = self.confluence.get_page_by_id(
-                page_id,
-                expand='body.storage,version,space'
+            # Use direct HTTP request (more reliable than library method)
+            import requests
+            from requests.auth import HTTPBasicAuth
+            
+            base_url = config.CONFLUENCE_URL.replace("/wiki", "").rstrip("/")
+            api_url = f"{base_url}/wiki/rest/api/content/{page_id}"
+            
+            params = {
+                "expand": "body.storage,version,space"
+            }
+            
+            response = requests.get(
+                api_url,
+                auth=HTTPBasicAuth(config.CONFLUENCE_USERNAME, config.CONFLUENCE_API_TOKEN),
+                headers={'Accept': 'application/json'},
+                params=params,
+                timeout=30
             )
+            
+            if response.status_code != 200:
+                if response.status_code == 403:
+                    raise Exception(f"403 FORBIDDEN - You don't have permission to access page {page_id}")
+                elif response.status_code == 404:
+                    raise Exception(f"404 NOT FOUND - Page {page_id} not found")
+                raise Exception(f"API returned status {response.status_code}: {response.text[:200]}")
+            
+            page = response.json()
             
             # Extract text from HTML body
             html_body = page.get('body', {}).get('storage', {}).get('value', '')
             text_content = self.html_to_text(html_body)
             
+            # Get web UI link
+            webui_link = page.get('_links', {}).get('webui', '')
+            if webui_link and not webui_link.startswith('http'):
+                webui_link = f"{base_url}/wiki{webui_link}"
+            
             return {
                 "id": page_id,
                 "title": page.get('title', 'Untitled'),
                 "content": text_content,
-                "url": page.get('_links', {}).get('webui', ''),
+                "url": webui_link,
                 "space": page.get('space', {}).get('key', ''),
                 "space_name": page.get('space', {}).get('name', ''),
                 "version": page.get('version', {}).get('number', 1),

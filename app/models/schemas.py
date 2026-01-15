@@ -32,6 +32,9 @@ class KnowledgeGap(BaseModel):
     last_detected: datetime = Field(default_factory=datetime.now)
     users_affected: List[str] = Field(default_factory=list, description="Users who encountered this gap")
     suggested_topic: Optional[str] = Field(None, description="Suggested documentation topic")
+    source_page_id: Optional[str] = Field(None, description="Confluence page ID if gap is from page analysis")
+    source_page_title: Optional[str] = Field(None, description="Confluence page title if gap is from page analysis")
+    source_document: Optional[str] = Field(None, description="Source document filename if applicable")
 
 
 class DocumentMetadata(BaseModel):

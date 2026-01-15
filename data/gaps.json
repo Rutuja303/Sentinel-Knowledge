@@ -1,0 +1,754 @@
+{
+  "gaps": {
+    "5a5ca95bb079": {
+      "id": "5a5ca95bb079",
+      "query": "What are the key fields extracted from `monolith_users`?",
+      "gap_type": "repeated_query",
+      "severity": "high",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-15 23:36:25.569213",
+      "last_detected": "2026-01-15 23:36:25.569215",
+      "users_affected": [],
+      "suggested_topic": "Key Fields Extracted From `Monolith_Users`?",
+      "source_page_id": "131074",
+      "source_page_title": "DBT Design Document: Kimball Dimensional Architecture",
+      "source_document": null
+    },
+    "405161f7ad67": {
+      "id": "405161f7ad67",
+      "query": "What are the key fields extracted from the `monolith_orders` table?",
+      "gap_type": "repeated_query",
+      "severity": "high",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-15 23:42:32.149932",
+      "last_detected": "2026-01-15 23:42:32.149941",
+      "users_affected": [],
+      "suggested_topic": "Key Fields Extracted From `Monolith_Orders`",
+      "source_page_id": "131074",
+      "source_page_title": "DBT Design Document: Kimball Dimensional Architecture",
+      "source_document": null
+    },
+    "cb384c6b436e": {
+      "id": "cb384c6b436e",
+      "query": "What are the key fields extracted from the `third_party_events` table?",
+      "gap_type": "repeated_query",
+      "severity": "high",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-15 23:42:40.234438",
+      "last_detected": "2026-01-15 23:42:40.234441",
+      "users_affected": [],
+      "suggested_topic": "Key Fields Extracted From `Third_Party_Events`",
+      "source_page_id": null,
+      "source_page_title": null,
+      "source_document": null
+    },
+    "30e41ea4188b": {
+      "id": "30e41ea4188b",
+      "query": "What are the key fields extracted from the `monolith_orders` and `third_party_events` tables?",
+      "gap_type": "repeated_query",
+      "severity": "high",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-15 23:47:32.131927",
+      "last_detected": "2026-01-15 23:47:32.131934",
+      "users_affected": [],
+      "suggested_topic": "Key Fields Extracted From `Monolith_Orders`",
+      "source_page_id": "131074",
+      "source_page_title": "DBT Design Document: Kimball Dimensional Architecture",
+      "source_document": null
+    },
+    "7230e93d7241": {
+      "id": "7230e93d7241",
+      "query": "How does the dbt project architecture align with Kimball dimensional modeling?",
+      "gap_type": "repeated_query",
+      "severity": "high",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-15 23:51:50.696480",
+      "last_detected": "2026-01-15 23:51:50.696487",
+      "users_affected": [],
+      "suggested_topic": "Dbt Project Architecture Align With",
+      "source_page_id": null,
+      "source_page_title": null,
+      "source_document": null
+    },
+    "098c621f99cb": {
+      "id": "098c621f99cb",
+      "query": "How does the dbt project architecture align with Kimball dimensional modeling principles?",
+      "gap_type": "repeated_query",
+      "severity": "high",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 00:04:20.862703",
+      "last_detected": "2026-01-16 00:04:20.862710",
+      "users_affected": [],
+      "suggested_topic": "Dbt Project Architecture Align With",
+      "source_page_id": "131074",
+      "source_page_title": "DBT Design Document: Kimball Dimensional Architecture",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "596ba6c7c1ce": {
+      "id": "596ba6c7c1ce",
+      "query": "What are the key fields extracted from the `monolith_orders` and `third_party_events` schemas?",
+      "gap_type": "repeated_query",
+      "severity": "high",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 00:04:31.530267",
+      "last_detected": "2026-01-16 00:04:31.530273",
+      "users_affected": [],
+      "suggested_topic": "Key Fields Extracted From `Monolith_Orders`",
+      "source_page_id": "131074",
+      "source_page_title": "DBT Design Document: Kimball Dimensional Architecture",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    }
+  },
+  "query_history": [
+    {
+      "query": "How does the dbt project architecture align with Kimball dimensional modeling?",
+      "timestamp": "2026-01-15T23:33:19.164680",
+      "user_id": null,
+      "similarity_scores": [
+        0.8141173161674929,
+        0.8138514509969221,
+        0.6786966616465319,
+        0.619712440571391,
+        0.5934133539005707
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What is the purpose of the `cc` schema in the dbt project?",
+      "timestamp": "2026-01-15T23:33:25.507955",
+      "user_id": null,
+      "similarity_scores": [
+        0.754378270467774,
+        0.7463574424616068,
+        0.6310969258679193,
+        0.6292773437118564,
+        0.6273705883330869
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What types of transformations are allowed in the staging phase?",
+      "timestamp": "2026-01-15T23:33:31.845193",
+      "user_id": null,
+      "similarity_scores": [
+        0.5831678479298683,
+        0.580426913678287,
+        0.5656233075301715,
+        0.5619828059764536,
+        0.5212683283447408
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "Can you explain the difference between staging and intermediate dimensions?",
+      "timestamp": "2026-01-15T23:33:56.690815",
+      "user_id": null,
+      "similarity_scores": [
+        0.6024791256449852,
+        0.5967566943223453,
+        0.5389091245690951,
+        0.5145240975723695,
+        0.503128305805116
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What are surrogate keys and why are they used in the core dimensions?",
+      "timestamp": "2026-01-15T23:34:14.466059",
+      "user_id": null,
+      "similarity_scores": [
+        0.5808328759768593,
+        0.5694386673927609,
+        0.568417777884417,
+        0.5586347942414382,
+        0.55813444872286
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What is SCD Type 2 and how does it relate to the `dim_customer` dimension?",
+      "timestamp": "2026-01-15T23:34:51.107538",
+      "user_id": null,
+      "similarity_scores": [
+        0.7128465960701058,
+        0.6262356668275605,
+        0.6251504695632062,
+        0.6190770003903528,
+        0.6185358798101076
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "How are shared `dim_*` tables created and maintained?",
+      "timestamp": "2026-01-15T23:35:05.650842",
+      "user_id": null,
+      "similarity_scores": [
+        0.6629329600336173,
+        0.6491086135212384,
+        0.6430342475169702,
+        0.6345726521367298,
+        0.6331836689469029
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What are the key fields extracted from `monolith_orders`?",
+      "timestamp": "2026-01-15T23:35:17.422231",
+      "user_id": null,
+      "similarity_scores": [
+        0.6214658981871825,
+        0.5919359335309217,
+        0.5780423161742636,
+        0.5752494361651465,
+        0.5720216741554439
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What are the key fields extracted from `third_party_events`?",
+      "timestamp": "2026-01-15T23:35:53.535635",
+      "user_id": null,
+      "similarity_scores": [
+        0.6038366544437702,
+        0.5707788458614794,
+        0.5413360640241187,
+        0.5346559035432155,
+        0.5266354960365944
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What are the key fields extracted from `monolith_users`?",
+      "timestamp": "2026-01-15T23:36:25.554780",
+      "user_id": null,
+      "similarity_scores": [
+        0.5888665204869218,
+        0.5470068359056987,
+        0.5309027692009239,
+        0.5164602791802192,
+        0.5112449201662007
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "How does the dbt project architecture align with Kimball dimensional modeling?",
+      "timestamp": "2026-01-15T23:41:47.289668",
+      "user_id": null,
+      "similarity_scores": [
+        0.8141173161674929,
+        0.8138514509969221,
+        0.6786966616465319,
+        0.619712440571391,
+        0.5934133539005707
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What is the purpose of the `cc` schema in the dbt project?",
+      "timestamp": "2026-01-15T23:41:53.256253",
+      "user_id": null,
+      "similarity_scores": [
+        0.754378270467774,
+        0.7463574424616068,
+        0.6310969258679193,
+        0.6292773437118564,
+        0.6273705883330869
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What types of transformations are performed in the staging layer?",
+      "timestamp": "2026-01-15T23:41:58.749716",
+      "user_id": null,
+      "similarity_scores": [
+        0.6083646989605067,
+        0.6062822959213106,
+        0.5925715716244546,
+        0.5856657377158935,
+        0.5725612679846546
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What are surrogate keys and why are they used in the core dimensions?",
+      "timestamp": "2026-01-15T23:42:06.995587",
+      "user_id": null,
+      "similarity_scores": [
+        0.5808328759768593,
+        0.5694386673927609,
+        0.568417777884417,
+        0.5586347942414382,
+        0.55813444872286
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What is SCD Type 2 and how does it relate to the `dim_customer` dimension?",
+      "timestamp": "2026-01-15T23:42:14.661963",
+      "user_id": null,
+      "similarity_scores": [
+        0.7128465960701058,
+        0.6262356668275605,
+        0.6251504695632062,
+        0.6190770003903528,
+        0.6185358798101076
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "Can you provide an example of a `fact_*` table?",
+      "timestamp": "2026-01-15T23:42:22.947366",
+      "user_id": null,
+      "similarity_scores": [
+        0.6377259954164345,
+        0.6113339630737054,
+        0.6046766832130835,
+        0.5933365197116,
+        0.5775035367318577
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What are the key fields extracted from the `monolith_orders` table?",
+      "timestamp": "2026-01-15T23:42:32.138954",
+      "user_id": null,
+      "similarity_scores": [
+        0.6653625485526612,
+        0.6316010165111574,
+        0.6146080408301512,
+        0.6050047342250089,
+        0.6034532932430793
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What are the key fields extracted from the `third_party_events` table?",
+      "timestamp": "2026-01-15T23:42:40.229276",
+      "user_id": null,
+      "similarity_scores": [
+        0.631243600826232,
+        0.5997575438925061,
+        0.5821850573406279,
+        0.5524650769964635,
+        0.5447479372101547
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What is the purpose of the `monolith_users` table?",
+      "timestamp": "2026-01-15T23:42:46.832819",
+      "user_id": null,
+      "similarity_scores": [
+        0.6040019333629167,
+        0.5461700368626778,
+        0.5434480445936565,
+        0.5354330078047864,
+        0.5327369655368711
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "How do I create a custom test in dbt using dbt_utils?",
+      "timestamp": "2026-01-15T23:42:52.620134",
+      "user_id": null,
+      "similarity_scores": [
+        0.681973777470547,
+        0.6812893507061464,
+        0.6509522714899716,
+        0.6334997216113589,
+        0.5994817383614838
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What types of tests are available in dbt?",
+      "timestamp": "2026-01-15T23:42:59.697979",
+      "user_id": null,
+      "similarity_scores": [
+        0.6548446295576649,
+        0.6442944611229419,
+        0.6362242746762631,
+        0.6175362829798294,
+        0.5662073085107664
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "How do I schedule dbt Cloud jobs to build the dbt project?",
+      "timestamp": "2026-01-15T23:43:04.960156",
+      "user_id": null,
+      "similarity_scores": [
+        0.6847241544642173,
+        0.6774036601662544,
+        0.670125516783214,
+        0.6527881733301315,
+        0.5664825384665845
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "How does the `config(enabled=var('layer', 'all'))` function work in dbt?",
+      "timestamp": "2026-01-15T23:43:11.710317",
+      "user_id": null,
+      "similarity_scores": [
+        0.8477841176602705,
+        0.743793490631582,
+        0.6160798669046568,
+        0.6105235445053249,
+        0.5909394480872895
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What are data marts and how do they relate to core dimensions?",
+      "timestamp": "2026-01-15T23:43:24.910553",
+      "user_id": null,
+      "similarity_scores": [
+        0.6806946692294094,
+        0.6582484431237378,
+        0.6505131200134529,
+        0.6228158073616543,
+        0.6192085819941183
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What is the purpose of the \u2018sales\u2019 data mart?",
+      "timestamp": "2026-01-15T23:43:37.054753",
+      "user_id": null,
+      "similarity_scores": [
+        0.6052372288552448,
+        0.5853006892612367,
+        0.5851869484408588,
+        0.5805393795397609,
+        0.5790797771475901
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What key models are used within the \u2018sales\u2019 data mart?",
+      "timestamp": "2026-01-15T23:44:04.117729",
+      "user_id": null,
+      "similarity_scores": [
+        0.6980948037338286,
+        0.6401042409486866,
+        0.6377925136771048,
+        0.6347676659106781,
+        0.6300539910482369
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What metrics can be derived from the `fact_sales_orders` table?",
+      "timestamp": "2026-01-15T23:44:15.809669",
+      "user_id": null,
+      "similarity_scores": [
+        0.6866828492305316,
+        0.6679606301387931,
+        0.6672601591208543,
+        0.6362881014183669,
+        0.6252199888169155
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "How do I create a roadmap using the provided tools?",
+      "timestamp": "2026-01-15T23:44:26.903869",
+      "user_id": null,
+      "similarity_scores": [
+        0.7815756124772449,
+        0.6889475338563134,
+        0.564180339005283,
+        0.5539591013068986,
+        0.5443141784712959
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What are the components of a roadmap (bars, lanes, markers)?",
+      "timestamp": "2026-01-15T23:44:36.556357",
+      "user_id": null,
+      "similarity_scores": [
+        0.7512516485957482,
+        0.6108436983102611,
+        0.5570891813891056,
+        0.5527114070158192,
+        0.5456266420214081
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "How can I customize the roadmap templates?",
+      "timestamp": "2026-01-15T23:44:43.540853",
+      "user_id": null,
+      "similarity_scores": [
+        0.7453900357385878,
+        0.7365669427539557,
+        0.5705938189810459,
+        0.5624435447956926,
+        0.5512791859773176
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "Where can I find more information about the software development templates?",
+      "timestamp": "2026-01-15T23:44:48.767636",
+      "user_id": null,
+      "similarity_scores": [
+        0.721586808192736,
+        0.6143241304088217,
+        0.6014789889539606,
+        0.5806119731467443,
+        0.568673751829983
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What is the purpose of the \u201cStatus\u201d section and how can it be used?",
+      "timestamp": "2026-01-15T23:44:57.962759",
+      "user_id": null,
+      "similarity_scores": [
+        0.5135796001077748,
+        0.5081712815581585,
+        0.5054466067938775,
+        0.4917411605610351,
+        0.48516461991459425
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "How do I add a roadmap planner to my dbt project?",
+      "timestamp": "2026-01-15T23:45:03.949018",
+      "user_id": null,
+      "similarity_scores": [
+        0.7583756629342505,
+        0.6648489683700655,
+        0.6617101439619224,
+        0.6424925994935267,
+        0.6290328358599633
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What is the recommended approach for testing revenue calculations?",
+      "timestamp": "2026-01-15T23:45:10.563869",
+      "user_id": null,
+      "similarity_scores": [
+        0.552568367602471,
+        0.5356369901268001,
+        0.5316235791770556,
+        0.5278613354699245,
+        0.5207921956640847
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "How do I generate auto-diagrams for my dbt project using Confluence embed?",
+      "timestamp": "2026-01-15T23:45:15.482426",
+      "user_id": null,
+      "similarity_scores": [
+        0.7342177571631582,
+        0.7081409953541203,
+        0.6692611009295225,
+        0.659357280057726,
+        0.6405794702757591
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "Can I use custom SCD types beyond Type 2?",
+      "timestamp": "2026-01-15T23:45:21.320145",
+      "user_id": null,
+      "similarity_scores": [
+        0.601560055575803,
+        0.5724428023690571,
+        0.5716827643400629,
+        0.5598213690338001,
+        0.5547114211581521
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What are the limitations of the staging layer transformations?",
+      "timestamp": "2026-01-15T23:45:28.015174",
+      "user_id": null,
+      "similarity_scores": [
+        0.5717987244655021,
+        0.5566232142609817,
+        0.5554219680403475,
+        0.5327187736706694,
+        0.5253693089519106
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "How do I troubleshoot issues with dbt Cloud jobs failing to schedule?",
+      "timestamp": "2026-01-15T23:45:35.133008",
+      "user_id": null,
+      "similarity_scores": [
+        0.6088348153908786,
+        0.600507143979902,
+        0.594637381325215,
+        0.5902471805332961,
+        0.5449183113537532
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What is the difference between a materialized view and a materialized table in dbt?",
+      "timestamp": "2026-01-15T23:45:42.193360",
+      "user_id": null,
+      "similarity_scores": [
+        0.7117844349091144,
+        0.7045534553493933,
+        0.6388513835981884,
+        0.6333524113921796,
+        0.62873798692132
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "How do I ensure consistent slicing across different marts?",
+      "timestamp": "2026-01-15T23:45:51.771276",
+      "user_id": null,
+      "similarity_scores": [
+        0.7347064439611933,
+        0.6807107739524866,
+        0.613046656727062,
+        0.6102491233208166,
+        0.5684088290611442
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What is the overall architecture of the dbt project based on the Kimball dimensional modeling principles?",
+      "timestamp": "2026-01-15T23:46:40.612951",
+      "user_id": null,
+      "similarity_scores": [
+        0.8403445685394342,
+        0.8335520337520537,
+        0.670631600384364,
+        0.6360832329017223,
+        0.6046995101659791
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "How does the dbt project handle raw data from internal systems and third-party sources?",
+      "timestamp": "2026-01-15T23:46:53.623463",
+      "user_id": null,
+      "similarity_scores": [
+        0.7159797135289595,
+        0.7105873435747386,
+        0.6766279961644022,
+        0.6023089068351705,
+        0.6018676415644238
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What is the purpose of the staging layer in the dbt transformation process?",
+      "timestamp": "2026-01-15T23:46:59.866711",
+      "user_id": null,
+      "similarity_scores": [
+        0.724062186695589,
+        0.7167386170742707,
+        0.6786589392683492,
+        0.6457317951377893,
+        0.5867475694540947
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What transformations are allowed in the staging layer, and what is explicitly restricted?",
+      "timestamp": "2026-01-15T23:47:06.868009",
+      "user_id": null,
+      "similarity_scores": [
+        0.598300063705231,
+        0.5959605838322817,
+        0.5908770510358082,
+        0.5864369360771833,
+        0.5672626824939778
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What are the different types of Surrogate Keys used in the dbt project?",
+      "timestamp": "2026-01-15T23:47:13.167211",
+      "user_id": null,
+      "similarity_scores": [
+        0.726260889734771,
+        0.7113956296481116,
+        0.6859171852994594,
+        0.6330315125902755,
+        0.6184184166227091
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What is SCD Type 2, and how is it implemented in the `dim_customer` dimension?",
+      "timestamp": "2026-01-15T23:47:23.014962",
+      "user_id": null,
+      "similarity_scores": [
+        0.7000759974523802,
+        0.6524403565957743,
+        0.6309748876813871,
+        0.628034356245078,
+        0.6234712543841028
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What are the key fields extracted from the `monolith_orders` and `third_party_events` tables?",
+      "timestamp": "2026-01-15T23:47:32.123090",
+      "user_id": null,
+      "similarity_scores": [
+        0.6700623295549162,
+        0.6531686284203404,
+        0.646388220041667,
+        0.6381670152223818,
+        0.6051069597919342
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "How does the dbt project architecture align with Kimball dimensional modeling?",
+      "timestamp": "2026-01-15T23:51:50.688594",
+      "user_id": null,
+      "similarity_scores": [
+        0.8141173161674929,
+        0.8138514509969221,
+        0.6786966616465319,
+        0.619712440571391,
+        0.5934133539005707
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "How does the dbt project architecture align with Kimball dimensional modeling principles?",
+      "timestamp": "2026-01-16T00:04:20.854199",
+      "user_id": null,
+      "similarity_scores": [
+        0.8239783795761599,
+        0.8204754466478931,
+        0.6744439560100557,
+        0.6133362565181819,
+        0.5900817210677007
+      ],
+      "num_documents": 5
+    },
+    {
+      "query": "What are the key fields extracted from the `monolith_orders` and `third_party_events` schemas?",
+      "timestamp": "2026-01-16T00:04:31.524238",
+      "user_id": null,
+      "similarity_scores": [
+        0.6513819886025867,
+        0.645418750590976,
+        0.6435899491059025,
+        0.6371613125348088,
+        0.6001992759910475
+      ],
+      "num_documents": 5
+    }
+  ]
+}

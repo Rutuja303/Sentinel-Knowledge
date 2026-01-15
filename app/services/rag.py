@@ -1,5 +1,5 @@
 from typing import Dict, List, Tuple
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from app.services.embeddings import EmbeddingService
 from app.utils.config import config
 
@@ -18,7 +18,8 @@ class RAGService:
             self.llm = ChatOllama(
                 model=config.OLLAMA_LLM_MODEL,
                 base_url=config.OLLAMA_BASE_URL,
-                temperature=0.1
+                temperature=0.1,
+                timeout=120.0  # 2 minute timeout per LLM call
             )
         else:  # OpenAI
             from langchain_openai import ChatOpenAI
@@ -38,8 +39,10 @@ Rules:
 4. Cite which document/section you're using when possible
 5. If you're uncertain, explicitly state your uncertainty"""
     
-    def retrieve(self, query: str, n_results: int = 5) -> Tuple[List[str], List[float], List[Dict]]:
-        """Retrieve relevant documents for a query"""
+    def retrieve(self, query: str, n_results: int = 10) -> Tuple[List[str], List[float], List[Dict]]:
+        """Retrieve relevant documents for a query (searches across ALL documents in knowledge base)"""
+        # Search across ALL documents in the knowledge base (not limited to one file)
+        # Increased n_results to get more diverse sources from different files
         results = self.embedding_service.search(query, n_results=n_results)
         
         documents = results["documents"]
@@ -72,13 +75,18 @@ Question: {query}
 Please provide an answer based on the context above. If the context doesn't contain enough information to answer the question, please state that clearly.""")
         ]
         
-        # Generate response
-        response = self.llm(messages)
-        return response.content
+        # Generate response with timeout handling
+        try:
+            response = self.llm.invoke(messages)
+            return response.content if hasattr(response, 'content') else str(response)
+        except Exception as e:
+            # If LLM call fails, return a basic response
+            print(f"LLM generation error: {e}")
+            return "I encountered an error while generating a response. Please try again."
     
-    def query(self, question: str, n_results: int = 5) -> Dict:
-        """Complete RAG query: retrieve + generate"""
-        # Retrieve relevant documents
+    def query(self, question: str, n_results: int = 10) -> Dict:
+        """Complete RAG query: retrieve + generate (searches across ALL files)"""
+        # Retrieve relevant documents from ALL files (increased n_results for better coverage)
         documents, similarity_scores, metadatas = self.retrieve(question, n_results)
         
         # Generate answer

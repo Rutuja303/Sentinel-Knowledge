@@ -1,5 +1,5 @@
 from typing import List, Dict
-from langchain.schema import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from app.services.embeddings import EmbeddingService
 from app.utils.config import config
 import os
@@ -19,7 +19,8 @@ class QuestionGeneratorService:
             self.llm = ChatOllama(
                 model=config.OLLAMA_LLM_MODEL,
                 base_url=config.OLLAMA_BASE_URL,
-                temperature=0.7  # Higher temperature for more creative questions
+                temperature=0.7,  # Higher temperature for more creative questions
+                timeout=120.0  # 2 minute timeout per LLM call
             )
         else:  # OpenAI
             from langchain_openai import ChatOpenAI
@@ -149,6 +150,173 @@ Return only the questions, one per line, without numbering or bullets."""
             print(f"Error generating questions: {e}")
             # Return fallback questions on error
             return self._get_fallback_questions()
+    
+    def generate_questions_for_page(self, page_id: str, num_questions: int = 5) -> List[str]:
+        """Generate questions specifically for a Confluence page"""
+        try:
+            # Get all documents and filter by page_id
+            all_results = self.embedding_service.collection.get(limit=1000)
+            
+            # Filter documents from this specific page
+            page_documents = []
+            page_title = ""
+            for i, metadata in enumerate(all_results.get("metadatas", [])):
+                if metadata.get("page_id") == page_id:
+                    doc = all_results.get("documents", [])[i]
+                    if doc:
+                        page_documents.append(doc)
+                    if not page_title and metadata.get("title"):
+                        page_title = metadata.get("title", "")
+            
+            if not page_documents:
+                # Fallback if page not found
+                return self._get_fallback_questions()[:num_questions]
+            
+            # Get sample content from this page
+            samples = [doc[:300] for doc in page_documents[:5] if doc]
+            
+            samples_text = "\n".join([f"- {s}" for s in samples])
+            
+            # Generate questions based on this page's content
+            prompt = f"""Based on the following content from a Confluence page titled "{page_title}", generate {num_questions} relevant questions that users might ask about this page.
+
+Page Content Samples:
+{samples_text}
+
+Generate {num_questions} specific questions that:
+1. Are directly related to the content shown
+2. Cover different aspects of the page (procedures, concepts, troubleshooting)
+3. Are phrased naturally as users would ask them
+4. Are specific to this page's content
+
+Return only the questions, one per line, without numbering or bullets."""
+
+            messages = [
+                SystemMessage(content="You are a helpful assistant that generates relevant questions based on documentation content."),
+                HumanMessage(content=prompt)
+            ]
+            
+            response = self.llm(messages)
+            questions = [q.strip() for q in response.content.split('\n') if q.strip()]
+            
+            # Clean up questions
+            cleaned_questions = []
+            for q in questions:
+                q = q.lstrip('0123456789.-) ').strip()
+                if q and len(q) > 10:
+                    cleaned_questions.append(q)
+            
+            # If we got fewer questions, add some generic ones
+            if len(cleaned_questions) < num_questions:
+                generic = [
+                    f"What is covered in {page_title}?",
+                    f"How does {page_title} work?",
+                    f"What are the key points in {page_title}?",
+                    f"Can you explain {page_title}?",
+                    f"What procedures are described in {page_title}?"
+                ]
+                for gq in generic:
+                    if len(cleaned_questions) < num_questions:
+                        cleaned_questions.append(gq)
+            
+            return cleaned_questions[:num_questions]
+        
+        except Exception as e:
+            print(f"Error generating questions for page: {e}")
+            return self._get_fallback_questions()[:num_questions]
+    
+    def generate_questions_for_confluence(self, num_questions: int = 20) -> List[str]:
+        """Generate questions based on ALL Confluence content"""
+        try:
+            # Get ALL Confluence documents (increased limit to ensure we get everything)
+            confluence_docs = self.embedding_service.get_confluence_documents(limit=50000)
+            
+            if not confluence_docs.get("documents"):
+                return self._get_fallback_questions()[:num_questions]
+            
+            print(f"📊 Generating questions from {len(confluence_docs.get('documents', []))} Confluence document chunks")
+            
+            # Get unique page titles from ALL documents
+            page_titles = set()
+            for metadata in confluence_docs.get("metadatas", []):
+                if metadata.get("title"):
+                    page_titles.add(metadata.get("title"))
+            
+            print(f"📄 Found {len(page_titles)} unique Confluence pages")
+            
+            # Get sample content from ALL Confluence documents (more samples for better coverage)
+            samples = []
+            # Sample from different parts of the collection for better coverage
+            total_docs = len(confluence_docs.get("documents", []))
+            sample_indices = [0, total_docs // 4, total_docs // 2, 3 * total_docs // 4, total_docs - 1] if total_docs > 5 else list(range(total_docs))
+            
+            for idx in sample_indices[:20]:  # Get up to 20 samples
+                if idx < total_docs:
+                    doc = confluence_docs.get("documents", [])[idx]
+                    if doc:
+                        sample = doc[:300].strip()
+                        if sample:
+                            samples.append(sample)
+            
+            if not samples:
+                return self._get_fallback_questions()[:num_questions]
+            
+            # Include ALL page titles (not just first 20) to ensure questions cover all files
+            all_titles = list(page_titles)
+            titles_text = "\n".join([f"- {title}" for title in all_titles[:50]])  # Show up to 50 titles
+            if len(all_titles) > 50:
+                titles_text += f"\n... and {len(all_titles) - 50} more pages"
+            
+            samples_text = "\n".join([f"- {s}" for s in samples[:15]])  # More samples
+            
+            # Generate questions based on ALL Confluence content from ALL files
+            prompt = f"""Based on the following Confluence pages and content from your knowledge base, generate {num_questions} relevant questions that users might ask about this documentation.
+
+IMPORTANT: Generate questions that cover DIFFERENT files/pages, not just one file. Ensure questions are distributed across all the pages listed below.
+
+Confluence Pages ({len(all_titles)} total pages):
+{titles_text}
+
+Sample Content from various pages:
+{samples_text}
+
+Generate {num_questions} diverse questions that:
+1. Cover different topics across ALL the Confluence pages (not just one page)
+2. Include questions from at least {min(5, len(all_titles))} different pages/files
+3. Include how-to questions, what-is questions, troubleshooting questions
+4. Are phrased naturally as users would ask them
+5. Are specific and actionable
+6. Cover potential gaps in documentation across multiple files
+
+Return only the questions, one per line, without numbering or bullets."""
+
+            messages = [
+                SystemMessage(content="You are a helpful assistant that generates relevant questions based on documentation content."),
+                HumanMessage(content=prompt)
+            ]
+            
+            response = self.llm(messages)
+            questions = [q.strip() for q in response.content.split('\n') if q.strip()]
+            
+            # Clean up questions
+            cleaned_questions = []
+            for q in questions:
+                q = q.lstrip('0123456789.-) ').strip()
+                if q and len(q) > 10:
+                    cleaned_questions.append(q)
+            
+            # If we got fewer questions, add fallbacks
+            if len(cleaned_questions) < num_questions:
+                fallbacks = self._get_fallback_questions()
+                for fq in fallbacks:
+                    if fq not in cleaned_questions and len(cleaned_questions) < num_questions:
+                        cleaned_questions.append(fq)
+            
+            return cleaned_questions[:num_questions]
+        
+        except Exception as e:
+            print(f"Error generating questions for Confluence: {e}")
+            return self._get_fallback_questions()[:num_questions]
     
     def _get_fallback_questions(self) -> List[str]:
         """Fallback questions when content analysis fails"""

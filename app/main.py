@@ -3,6 +3,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import uuid
 from pathlib import Path
+import warnings
+import logging
+import os
+
+# Disable ChromaDB telemetry to avoid errors
+os.environ["ANONYMIZED_TELEMETRY"] = "False"
+os.environ["CHROMA_TELEMETRY_DISABLED"] = "True"
+logging.getLogger("chromadb.telemetry").setLevel(logging.ERROR)
+warnings.filterwarnings("ignore", category=UserWarning, module="chromadb")
 
 from app.models.schemas import QueryRequest, QueryResponse, KnowledgeGap
 from app.services.ingestion import DocumentIngestionService
@@ -122,13 +131,33 @@ async def query_knowledge_base(request: QueryRequest):
         # Perform RAG query
         rag_result = rag_service.query(request.question)
         
-        # Detect gaps
+        # Extract source information from context if available
+        source_page_id = None
+        source_page_title = None
+        source_document = None
+        
+        if request.context:
+            source_page_id = request.context.get("source_page_id")
+            source_page_title = request.context.get("source_page_title")
+            source_document = request.context.get("source_document")
+        else:
+            # Try to extract from retrieved documents metadata
+            if rag_result.get("metadatas") and len(rag_result["metadatas"]) > 0:
+                first_meta = rag_result["metadatas"][0]
+                source_page_id = first_meta.get("page_id")
+                source_page_title = first_meta.get("title")
+                source_document = first_meta.get("filename")
+        
+        # Detect gaps with source information
         gap = gap_detector.detect_gap(
             query=request.question,
             answer=rag_result["answer"],
             similarity_scores=rag_result["similarity_scores"],
             retrieved_documents=rag_result["retrieved_documents"],
-            user_id=request.user_id
+            user_id=request.user_id,
+            source_page_id=source_page_id,
+            source_page_title=source_page_title,
+            source_document=source_document
         )
         
         # Build response
@@ -236,15 +265,29 @@ async def ingest_single_file(file: UploadFile = File(...)):
 
 
 @app.get("/gaps", response_model=List[KnowledgeGap])
-async def get_knowledge_gaps(severity: str = None, limit: int = 20):
-    """Get detected knowledge gaps"""
+async def get_knowledge_gaps(severity: str = None, limit: int = 1000):
+    """Get detected knowledge gaps from the entire collection"""
     try:
         if severity:
             gaps = gap_detector.get_gaps_by_severity(severity)
         else:
-            gaps = gap_detector.get_top_gaps(limit)
+            # Get all gaps, not just top ones, to show entire collection
+            gaps = gap_detector.get_all_gaps()
+            # Sort by priority (severity * occurrence_count)
+            gaps = sorted(
+                gaps,
+                key=lambda g: (3 if g.severity == "high" else 2 if g.severity == "medium" else 1) * g.occurrence_count,
+                reverse=True
+            )
+            # Apply limit
+            gaps = gaps[:limit]
         
-        return gaps
+        # Convert to dict for JSON serialization (Pydantic v2 uses model_dump)
+        try:
+            return [gap.model_dump() if hasattr(gap, 'model_dump') else gap.dict() for gap in gaps]
+        except:
+            # Fallback for older Pydantic versions
+            return [gap.dict() for gap in gaps]
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving gaps: {str(e)}")
@@ -400,6 +443,287 @@ async def get_confluence_page(page_id: str):
         return page
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching Confluence page: {str(e)}")
+
+
+@app.post("/ingest/confluence/page/{page_id}")
+async def ingest_single_confluence_page(page_id: str):
+    """Ingest a single Confluence page by ID"""
+    if not confluence_service:
+        raise HTTPException(
+            status_code=503,
+            detail="Confluence integration not configured"
+        )
+    
+    try:
+        # Get page content
+        page = confluence_service.get_page_content(page_id)
+        
+        # Prepare for embedding
+        ingested_page = {
+            "source": "confluence",
+            "page_id": page["id"],
+            "title": page["title"],
+            "content": page["content"],
+            "url": page["url"],
+            "space": page["space"],
+            "space_name": page["space_name"],
+            "author": page["author"],
+            "last_modified": page["last_modified"],
+            "metadata": {
+                "confluence_page_id": page["id"],
+                "confluence_url": page["url"],
+                "space_key": page["space"],
+                "version": page["version"]
+            }
+        }
+        
+        # Prepare chunks for embedding
+        prepared_chunks = confluence_service.prepare_for_embedding([ingested_page])
+        
+        # Add to vector store
+        if embedding_service is None:
+            initialize_services()
+            if embedding_service is None:
+                raise HTTPException(
+                    status_code=503,
+                    detail="Embedding service not configured. Please set OPENAI_API_KEY or configure Ollama in .env file"
+                )
+        
+        total_chunks = 0
+        for chunk_data in prepared_chunks:
+            metadatas = [{
+                "source": "confluence",
+                "page_id": chunk_data["page_id"],
+                "title": chunk_data["title"],
+                "url": chunk_data["url"],
+                "space": chunk_data["space"],
+                "space_name": chunk_data["space_name"],
+                "author": chunk_data["author"],
+                "chunk_index": chunk_data["chunk_index"],
+                **chunk_data["metadata"]
+            }]
+            ids = [f"confluence_{chunk_data['page_id']}_{chunk_data['chunk_index']}"]
+            
+            embedding_service.add_documents([chunk_data["chunk"]], metadatas, ids)
+            total_chunks += 1
+        
+        return {
+            "message": "Confluence page ingested successfully",
+            "page_id": page_id,
+            "title": page["title"],
+            "total_chunks": total_chunks,
+            "space": page["space"],
+            "url": page["url"]
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error ingesting Confluence page: {str(e)}")
+
+
+@app.post("/analyze/confluence/all")
+async def analyze_all_confluence_data(num_questions: int = 15):
+    """Analyze all ingested Confluence data and detect knowledge gaps"""
+    if embedding_service is None or rag_service is None:
+        initialize_services()
+        if embedding_service is None or rag_service is None:
+            raise HTTPException(
+                status_code=503,
+                detail="Embedding service not configured"
+            )
+    
+    try:
+        # Get ALL Confluence documents (from all files/pages)
+        confluence_docs = embedding_service.get_confluence_documents(limit=50000)
+        
+        if not confluence_docs.get("documents"):
+            raise HTTPException(
+                status_code=404,
+                detail="No Confluence data found. Please ingest Confluence pages first."
+            )
+        
+        # Get unique pages info from ALL files
+        unique_pages = {}
+        unique_files = set()
+        for metadata in confluence_docs.get("metadatas", []):
+            page_id = metadata.get("page_id")
+            if page_id and page_id not in unique_pages:
+                unique_pages[page_id] = {
+                    "title": metadata.get("title", "Untitled"),
+                    "url": metadata.get("url", ""),
+                    "space": metadata.get("space", ""),
+                    "space_name": metadata.get("space_name", "")
+                }
+            # Track unique files/pages - check multiple fields
+            title = metadata.get("title") or metadata.get("page_title") or metadata.get("name")
+            if title:
+                unique_files.add(title)
+            # Also check filename
+            filename = metadata.get("filename") or metadata.get("file_name")
+            if filename:
+                unique_files.add(filename)
+        
+        print(f"📊 Analyzing {len(unique_pages)} unique Confluence pages from {len(unique_files)} unique files")
+        print(f"📄 Total document chunks to analyze: {len(confluence_docs.get('documents', []))}")
+        print(f"📋 Unique files/pages found: {', '.join(list(unique_files)[:10])}{'...' if len(unique_files) > 10 else ''}")
+        
+        # Generate questions based on all Confluence content (reduce default to speed up)
+        from app.services.question_generator import QuestionGeneratorService
+        question_gen = QuestionGeneratorService(embedding_service)
+        
+        # Limit questions to avoid timeout (max 15 for efficiency)
+        actual_num_questions = min(num_questions, 15)
+        analysis_questions = question_gen.generate_questions_for_confluence(actual_num_questions)
+        
+        # Analyze each question and detect gaps (with timeout protection)
+        gaps_detected = []
+        questions_processed = 0
+        
+        for i, question in enumerate(analysis_questions):
+            try:
+                print(f"🔍 Analyzing question {i+1}/{len(analysis_questions)}: {question[:60]}...")
+                # Query the knowledge base (searches across ALL documents, not just one file)
+                rag_result = rag_service.query(question)
+                
+                # Log which sources were found (should be from multiple files)
+                if rag_result.get("metadatas"):
+                    sources_found = set()
+                    for meta in rag_result["metadatas"]:
+                        # Check for Confluence sources
+                        if meta.get("source") == "confluence":
+                            title = meta.get("title")
+                            if title:
+                                sources_found.add(title)
+                        # Check for file sources
+                        filename = meta.get("filename")
+                        if filename:
+                            sources_found.add(filename)
+                    if sources_found:
+                        print(f"   📄 Found sources from {len(sources_found)} file(s): {', '.join(list(sources_found)[:5])}{'...' if len(sources_found) > 5 else ''}")
+                    else:
+                        print(f"   ⚠️  No source information found in retrieved documents")
+                        # Debug: show what metadata we actually have
+                        if rag_result["metadatas"]:
+                            print(f"   🔍 Debug - Metadata keys: {list(rag_result['metadatas'][0].keys())}")
+                            print(f"   🔍 Debug - First metadata: {rag_result['metadatas'][0]}")
+                
+                # Extract source page/document info from retrieved documents
+                # Check all retrieved documents to find sources from multiple files
+                source_page_id = None
+                source_page_title = None
+                source_document = None
+                
+                # Track all unique sources found
+                all_sources = []
+                
+                if rag_result.get("metadatas") and len(rag_result["metadatas"]) > 0:
+                    # Log first metadata to debug
+                    if i == 0:
+                        print(f"   🔍 Sample metadata keys: {list(rag_result['metadatas'][0].keys()) if rag_result['metadatas'] else 'None'}")
+                    
+                    # Check all metadata to find sources from different files
+                    for meta in rag_result["metadatas"]:
+                        # Try multiple ways to extract source information
+                        title = None
+                        filename = None
+                        
+                        # Method 1: Confluence source
+                        if meta.get("source") == "confluence":
+                            title = meta.get("title") or meta.get("page_title") or meta.get("name")
+                            if title and title not in all_sources:
+                                all_sources.append(title)
+                            if not source_page_id:
+                                source_page_id = meta.get("page_id") or meta.get("id")
+                                source_page_title = title
+                        
+                        # Method 2: Regular file source
+                        filename = meta.get("filename") or meta.get("file_name") or meta.get("document")
+                        if filename and filename not in all_sources:
+                            all_sources.append(filename)
+                        if not source_document and filename:
+                            source_document = filename
+                        
+                        # Method 3: Fallback - use title if available (might be from any source)
+                        if not source_page_title and not source_document:
+                            fallback_title = meta.get("title") or meta.get("name") or meta.get("document_title")
+                            if fallback_title:
+                                if meta.get("source") == "confluence":
+                                    source_page_title = fallback_title
+                                else:
+                                    source_document = fallback_title
+                                if fallback_title not in all_sources:
+                                    all_sources.append(fallback_title)
+                
+                # If multiple sources found, log them
+                if len(all_sources) > 1:
+                    print(f"   ✅ Found sources from {len(all_sources)} different files: {', '.join(all_sources[:3])}{'...' if len(all_sources) > 3 else ''}")
+                elif len(all_sources) == 1:
+                    print(f"   ⚠️  Only found source from 1 file: {all_sources[0]}")
+                else:
+                    print(f"   ❌ No source information found in metadata")
+                
+                # Ensure we have at least one source
+                if not source_page_title and not source_document:
+                    # Try to extract from question or use a default
+                    print(f"   ⚠️  Warning: No source found for question, using fallback")
+                    # Don't set to None, let it be None so gap detector can handle it
+                
+                # Detect gaps
+                gap = gap_detector.detect_gap(
+                    query=question,
+                    answer=rag_result["answer"],
+                    similarity_scores=rag_result["similarity_scores"],
+                    retrieved_documents=rag_result["retrieved_documents"],
+                    source_page_id=source_page_id,
+                    source_page_title=source_page_title,
+                    source_document=source_document
+                )
+                
+                if gap:
+                    # Ensure we have source information - use the best available
+                    final_source_title = source_page_title or source_document
+                    if not final_source_title and all_sources:
+                        # Use first source found if we have any
+                        final_source_title = all_sources[0]
+                    
+                    gaps_detected.append({
+                        "query": question,
+                        "gap_type": gap.gap_type,
+                        "severity": gap.severity,
+                        "confidence_score": rag_result["confidence_score"],
+                        "source_page_title": source_page_title if source_page_title else (final_source_title if final_source_title else None),
+                        "source_document": source_document if source_document else (final_source_title if not source_page_title and final_source_title else None)
+                    })
+                    
+                    # Log gap detection with source
+                    print(f"   ✅ Gap detected: {gap.gap_type} (severity: {gap.severity}) - Source: {final_source_title or 'Unknown'}")
+                
+                questions_processed += 1
+                
+            except Exception as e:
+                # Continue processing other questions even if one fails
+                print(f"Error processing question {i+1}: {str(e)}")
+                continue
+        
+        print(f"✅ Analysis complete: {questions_processed} questions analyzed, {len(gaps_detected)} gaps detected")
+        print(f"📊 Analyzed {len(unique_pages)} unique pages from {len(unique_files)} unique files")
+        
+        return {
+            "message": "Confluence data analysis completed",
+            "total_confluence_pages": len(unique_pages),
+            "total_confluence_files": len(unique_files),
+            "total_confluence_chunks": len(confluence_docs.get("documents", [])),
+            "questions_analyzed": questions_processed,
+            "gaps_detected": len(gaps_detected),
+            "analysis_questions": analysis_questions[:questions_processed],
+            "gaps": gaps_detected
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing Confluence data: {str(e)}")
+
+
 
 
 @app.get("/suggested-questions", response_model=List[str])
