@@ -49,9 +49,16 @@ class GapDetectorService:
         user_id: Optional[str] = None,
         source_page_id: Optional[str] = None,
         source_page_title: Optional[str] = None,
-        source_document: Optional[str] = None
+        source_document: Optional[str] = None,
+        metadatas: Optional[List[Dict]] = None
     ) -> Optional[KnowledgeGap]:
-        """Detect if a query represents a knowledge gap"""
+        """Detect if a query represents a knowledge gap - detects 5 gap types:
+        1. missing_knowledge - Knowledge does not exist
+        2. incomplete_knowledge - Knowledge exists but incomplete
+        3. consistency_gap - Conflicting information across documents
+        4. fragmented_knowledge - Information spread across multiple pages
+        5. discoverability_gap - Knowledge exists but hard to find
+        """
         
         # Record query in history
         self.query_history.append({
@@ -66,41 +73,62 @@ class GapDetectorService:
         severity = "low"
         reason = None
         
-        # Detection Rule 1: Low similarity scores
-        if similarity_scores:
+        # 1️⃣ Missing Knowledge Gap - No documents found
+        if not retrieved_documents or len(retrieved_documents) == 0:
+            gap_type = "missing_knowledge"
+            severity = "high"
+            reason = "No relevant documents found - knowledge does not exist"
+        
+        # 2️⃣ Incomplete Knowledge Gap - Uncertainty phrases in answer
+        elif answer:
+            answer_lower = answer.lower()
+            for phrase in config.UNCERTAINTY_PHRASES:
+                if phrase.lower() in answer_lower:
+                    gap_type = "incomplete_knowledge"
+                    severity = "medium"
+                    reason = f"Answer contains uncertainty phrase: '{phrase}' - knowledge exists but incomplete"
+                    break
+        
+        # 3️⃣ Consistency Gap - Conflicting information across documents
+        if not gap_type and len(retrieved_documents) > 1:
+            # Check if answer contains contradiction indicators
+            contradiction_phrases = ["however", "but", "alternatively", "on the other hand", "contradicts", "conflicts", "different", "disagrees"]
+            answer_lower = answer.lower() if answer else ""
+            if any(phrase in answer_lower for phrase in contradiction_phrases):
+                gap_type = "consistency_gap"
+                severity = "high"
+                reason = f"Conflicting information found across {len(retrieved_documents)} documents"
+        
+        # 4️⃣ Fragmented Knowledge Gap - Information spread across multiple pages
+        if not gap_type and similarity_scores and len(retrieved_documents) > 1:
             max_similarity = max(similarity_scores)
             avg_similarity = sum(similarity_scores) / len(similarity_scores)
-            
-            if max_similarity < config.MIN_SIMILARITY_SCORE:
-                gap_type = "low_similarity"
-                severity = "high" if max_similarity < 0.2 else "medium"
-                reason = f"Low similarity score: {max_similarity:.2f} (threshold: {config.MIN_SIMILARITY_SCORE})"
-        
-        # Detection Rule 2: Empty retrieval
-        if not retrieved_documents or len(retrieved_documents) == 0:
-            gap_type = "empty_retrieval"
-            severity = "high"
-            reason = "No relevant documents found"
-        
-        # Detection Rule 3: Uncertainty phrases in answer
-        answer_lower = answer.lower()
-        for phrase in config.UNCERTAINTY_PHRASES:
-            if phrase.lower() in answer_lower:
-                gap_type = "uncertainty"
+            # Multiple documents with medium similarity (0.3-0.6) suggests fragmentation
+            medium_relevance_count = sum(1 for s in similarity_scores if 0.3 <= s < 0.6)
+            if medium_relevance_count >= 2 and max_similarity < 0.7:
+                gap_type = "fragmented_knowledge"
                 severity = "medium"
-                reason = f"Answer contains uncertainty phrase: '{phrase}'"
-                break
+                reason = f"Information spread across {len(retrieved_documents)} pages, no single complete source"
         
-        # Detection Rule 4: Repeated queries
-        similar_queries = [
-            q for q in self.query_history[-50:]  # Check last 50 queries
-            if self._are_similar_queries(query, q["query"])
-        ]
+        # 5️⃣ Discoverability Gap - Knowledge exists but hard to find (low similarity)
+        if not gap_type and similarity_scores and len(retrieved_documents) > 0:
+            max_similarity = max(similarity_scores)
+            if max_similarity < config.MIN_SIMILARITY_SCORE:
+                gap_type = "discoverability_gap"
+                severity = "high" if max_similarity < 0.2 else "medium"
+                reason = f"Low similarity score: {max_similarity:.2f} - knowledge exists but hard to find"
         
-        if len(similar_queries) >= config.REPEATED_QUERY_THRESHOLD:
-            gap_type = "repeated_query"
-            severity = "high"
-            reason = f"Query asked {len(similar_queries)} times without good answer"
+        # Fallback: If no specific gap detected but query repeated multiple times, mark as fragmented
+        if not gap_type:
+            similar_queries = [
+                q for q in self.query_history[-50:]
+                if self._are_similar_queries(query, q["query"])
+            ]
+            
+            if len(similar_queries) >= config.REPEATED_QUERY_THRESHOLD:
+                gap_type = "fragmented_knowledge"
+                severity = "high"
+                reason = f"Query asked {len(similar_queries)} times - suggests fragmented information"
         
         # If gap detected, create or update gap record
         if gap_type:

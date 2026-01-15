@@ -25,7 +25,7 @@ class KnowledgeGap(BaseModel):
     """Model representing a detected knowledge gap"""
     id: str = Field(..., description="Unique identifier for the gap")
     query: str = Field(..., description="The question that revealed the gap")
-    gap_type: str = Field(..., description="Type of gap: low_similarity, repeated_query, uncertainty, empty_retrieval")
+    gap_type: str = Field(..., description="Type of gap: missing_knowledge, incomplete_knowledge, consistency_gap, fragmented_knowledge, discoverability_gap")
     severity: str = Field(..., description="Severity: high, medium, low")
     occurrence_count: int = Field(1, description="Number of times this gap was detected")
     first_detected: datetime = Field(default_factory=datetime.now)

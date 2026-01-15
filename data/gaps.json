@@ -97,6 +97,300 @@
       "source_page_id": "131074",
       "source_page_title": "DBT Design Document: Kimball Dimensional Architecture",
       "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "4ea47b16954a": {
+      "id": "4ea47b16954a",
+      "query": "What are the key fields extracted from the `monolith_orders` and `third_party_events` tables within the `cc` schema?",
+      "gap_type": "repeated_query",
+      "severity": "high",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 00:50:12.928185",
+      "last_detected": "2026-01-16 00:50:12.928191",
+      "users_affected": [],
+      "suggested_topic": "Key Fields Extracted From `Monolith_Orders`",
+      "source_page_id": "131074",
+      "source_page_title": "DBT Design Document: Kimball Dimensional Architecture",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "8209dc8e07fa": {
+      "id": "8209dc8e07fa",
+      "query": "How does the layering with `{{ config(enabled=var('layer', 'all')) }}` affect the testing and scheduling of my dbt models?",
+      "gap_type": "single_owner_gap",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:15:51.684276",
+      "last_detected": "2026-01-16 01:15:51.684276",
+      "users_affected": [],
+      "suggested_topic": "Layering With `{{ Config(Enabled=Var('Layer', 'All'))",
+      "source_page_id": "131074",
+      "source_page_title": "DBT Design Document: Kimball Dimensional Architecture",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "1ff2f8d9af16": {
+      "id": "1ff2f8d9af16",
+      "query": "What are the different types of testing supported within dbt, and how do I define custom tests beyond the generic ones?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:16:04.855996",
+      "last_detected": "2026-01-16 01:16:04.855999",
+      "users_affected": [],
+      "suggested_topic": "Different Types Of Testing Supported",
+      "source_page_id": "131074",
+      "source_page_title": "DBT Design Document: Kimball Dimensional Architecture",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "a5050f890d57": {
+      "id": "a5050f890d57",
+      "query": "Can you explain the refresh cadences for the business marts, and how those relate to the core layer and staging layer?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:16:19.574967",
+      "last_detected": "2026-01-16 01:16:19.574969",
+      "users_affected": [],
+      "suggested_topic": "Can You Explain Refresh Cadences",
+      "source_page_id": "851969",
+      "source_page_title": "Staging Layer",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "0ecd139c26b6": {
+      "id": "0ecd139c26b6",
+      "query": "What is the purpose of the staging sources and freshness documentation, and how does it relate to the overall data pipeline?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:16:34.365691",
+      "last_detected": "2026-01-16 01:16:34.365697",
+      "users_affected": [],
+      "suggested_topic": "Purpose Of Staging Sources And",
+      "source_page_id": "851969",
+      "source_page_title": "Staging Layer",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "3138259e9856": {
+      "id": "3138259e9856",
+      "query": "How do I track the lineage of my dbt models, and how does the Confluence embed feature support this?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:16:45.793528",
+      "last_detected": "2026-01-16 01:16:45.793534",
+      "users_affected": [],
+      "suggested_topic": "I Track Lineage Of My",
+      "source_page_id": "131074",
+      "source_page_title": "DBT Design Document: Kimball Dimensional Architecture",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "016e5a583035": {
+      "id": "016e5a583035",
+      "query": "What are the key considerations when defining requirements for a new product, as outlined in the Template - Product requirements page?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:17:03.414240",
+      "last_detected": "2026-01-16 01:17:03.414245",
+      "users_affected": [],
+      "suggested_topic": "Key Considerations Defining Requirements For",
+      "source_page_id": "229484",
+      "source_page_title": "Software development",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "7af365be55bd": {
+      "id": "7af365be55bd",
+      "query": "How do I use the Template - Decision documentation to ensure decisions are clearly recorded and understood across my team?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:17:38.197885",
+      "last_detected": "2026-01-16 01:17:38.197887",
+      "users_affected": [],
+      "suggested_topic": "I Use Template - Decision",
+      "source_page_id": "229543",
+      "source_page_title": "Template - Decision documentation",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "f65467ccb0d0": {
+      "id": "f65467ccb0d0",
+      "query": "What\u2019s the difference between the staging layer and the core layer, and how does this layering impact data transformations?",
+      "gap_type": "single_owner_gap",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:17:55.382215",
+      "last_detected": "2026-01-16 01:17:55.382219",
+      "users_affected": [],
+      "suggested_topic": "What\u2019S Difference Between Staging Layer",
+      "source_page_id": "851969",
+      "source_page_title": "Staging Layer",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "e6b538b7961d": {
+      "id": "e6b538b7961d",
+      "query": "How do I define a new business mart, including specifying the business owner, key consumers, and refresh cadence?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:18:11.078480",
+      "last_detected": "2026-01-16 01:18:11.078483",
+      "users_affected": [],
+      "suggested_topic": "I Define New Business Mart,",
+      "source_page_id": "1114113",
+      "source_page_title": "Business marts",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "de42a84a20cf": {
+      "id": "de42a84a20cf",
+      "query": "What are the different sources used in the ingestion pipelines, and how are they connected to the Airflow DAGs for hourly updates?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:18:30.912374",
+      "last_detected": "2026-01-16 01:18:30.912381",
+      "users_affected": [],
+      "suggested_topic": "Different Sources Used In Ingestion",
+      "source_page_id": "950273",
+      "source_page_title": "Staging Sources & Freshness Doc",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "8412a0c9825c": {
+      "id": "8412a0c9825c",
+      "query": "How does the `{{ config(enabled=var('layer', 'all')) }}` layering system affect the testing and scheduling of dbt models?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "high",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:26:08.934528",
+      "last_detected": "2026-01-16 01:26:08.934530",
+      "users_affected": [],
+      "suggested_topic": "`{{ Config(Enabled=Var('Layer', 'All')) }}` Layering",
+      "source_page_id": "131074",
+      "source_page_title": "DBT Design Document: Kimball Dimensional Architecture",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "e415bbbd9f39": {
+      "id": "e415bbbd9f39",
+      "query": "What are the different refresh cadences for the sales, marketing, and finance analytics marts, and how do they relate to the key consumers of each mart?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:26:21.375055",
+      "last_detected": "2026-01-16 01:26:21.375060",
+      "users_affected": [],
+      "suggested_topic": "Different Refresh Cadences For Sales,",
+      "source_page_id": "1114113",
+      "source_page_title": "Business marts",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "7e895d4ab9f6": {
+      "id": "7e895d4ab9f6",
+      "query": "Can you provide an example of a custom test that could be used within a dbt model, beyond the generic tests provided?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:26:33.097396",
+      "last_detected": "2026-01-16 01:26:33.097402",
+      "users_affected": [],
+      "suggested_topic": "Can You Provide Example Of",
+      "source_page_id": "131074",
+      "source_page_title": "DBT Design Document: Kimball Dimensional Architecture",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "6edc12ca204e": {
+      "id": "6edc12ca204e",
+      "query": "What is the purpose of the Staging Layer, and how does it integrate with the Core Dimensions and Business marts?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:26:44.972069",
+      "last_detected": "2026-01-16 01:26:44.972076",
+      "users_affected": [],
+      "suggested_topic": "Purpose Of Staging Layer, And",
+      "source_page_id": "1114113",
+      "source_page_title": "Business marts",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "c556f03150ce": {
+      "id": "c556f03150ce",
+      "query": "How do the Ingestion Pipelines define the frequency and tools used for data loading, and can you explain the difference between Monolith and Third-Party sources?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:26:59.315601",
+      "last_detected": "2026-01-16 01:26:59.315604",
+      "users_affected": [],
+      "suggested_topic": "Ingestion Pipelines Define Frequency And",
+      "source_page_id": "950273",
+      "source_page_title": "Staging Sources & Freshness Doc",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "bf9240768b86": {
+      "id": "bf9240768b86",
+      "query": "What are the key considerations when defining a 'Requirement' in the template, including the importance, user story, and Jira issue linkage?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:27:11.626520",
+      "last_detected": "2026-01-16 01:27:11.626544",
+      "users_affected": [],
+      "suggested_topic": "Key Considerations Defining 'Requirement' In",
+      "source_page_id": "229484",
+      "source_page_title": "Software development",
+      "source_document": null
+    },
+    "911b7f5e859e": {
+      "id": "911b7f5e859e",
+      "query": "How does the documentation define the process for generating lineage diagrams using dbt, and how can these diagrams be embedded into Confluence pages?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:27:22.216174",
+      "last_detected": "2026-01-16 01:27:22.216183",
+      "users_affected": [],
+      "suggested_topic": "Documentation Define Process For Generating",
+      "source_page_id": "131074",
+      "source_page_title": "DBT Design Document: Kimball Dimensional Architecture",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "1ca136542644": {
+      "id": "1ca136542644",
+      "query": "What are the different source types defined in the `models/staging/sources.yml` file, and how do they contribute to testing and lineage tracking?",
+      "gap_type": "consistency_gap",
+      "severity": "high",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:27:34.906745",
+      "last_detected": "2026-01-16 01:27:34.906751",
+      "users_affected": [],
+      "suggested_topic": "Different Source Types Defined In",
+      "source_page_id": "950273",
+      "source_page_title": "Staging Sources & Freshness Doc",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "9394719722f1": {
+      "id": "9394719722f1",
+      "query": "How do the core dimensions relate to the business goals and key consumers of the analytics marts?",
+      "gap_type": "consistency_gap",
+      "severity": "high",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:27:47.522515",
+      "last_detected": "2026-01-16 01:27:47.522519",
+      "users_affected": [],
+      "suggested_topic": "Core Dimensions Relate To Business",
+      "source_page_id": "229560",
+      "source_page_title": "Core Dimensions",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "9690253b77be": {
+      "id": "9690253b77be",
+      "query": "What is the recommended approach for documenting meeting notes, and how can the \"Untitled live doc 2026-01-15\" document be used effectively?",
+      "gap_type": "fragmented_knowledge",
+      "severity": "medium",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:28:05.304287",
+      "last_detected": "2026-01-16 01:28:05.304294",
+      "users_affected": [],
+      "suggested_topic": "Recommended Approach For Documenting Meeting",
+      "source_page_id": "229531",
+      "source_page_title": "Template - Meeting notes",
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
     }
   },
   "query_history": [
@@ -749,6 +1043,438 @@
         0.6001992759910475
       ],
       "num_documents": 5
+    },
+    {
+      "query": "How does the `{{ config(enabled=var('layer', 'all')) }}` layering system affect the testing process in dbt?",
+      "timestamp": "2026-01-16T00:49:22.512893",
+      "user_id": null,
+      "similarity_scores": [
+        0.8179830984967452,
+        0.7213620320652239,
+        0.5888602306196866,
+        0.5823819041706892,
+        0.5660734615982596,
+        0.5599318429818401,
+        0.503394298071441,
+        0.48675621072976705,
+        0.4613265627561258,
+        0.4584666718732009
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "What are the different types of testing supported by dbt, and how do I create a custom test?",
+      "timestamp": "2026-01-16T00:49:34.099477",
+      "user_id": null,
+      "similarity_scores": [
+        0.6937176977704608,
+        0.684552432507497,
+        0.6736783600066238,
+        0.6709950291321762,
+        0.6129356411628671,
+        0.607506229934523,
+        0.6055643001218951,
+        0.5966239552462146,
+        0.5856798271844134,
+        0.5683502143523856
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "Can you explain the Kimball Dimensional Architecture and how it\u2019s implemented in this dbt project, specifically regarding staging, intermediate, and marts?",
+      "timestamp": "2026-01-16T00:50:00.777137",
+      "user_id": null,
+      "similarity_scores": [
+        0.7812655014393558,
+        0.7751864207089648,
+        0.6939446974874744,
+        0.6801013509077893,
+        0.6787051502463548,
+        0.6735549818690744,
+        0.6729577034350922,
+        0.6478024046408756,
+        0.6322993059443864,
+        0.6196656283380864
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "What are the key fields extracted from the `monolith_orders` and `third_party_events` tables within the `cc` schema?",
+      "timestamp": "2026-01-16T00:50:12.915588",
+      "user_id": null,
+      "similarity_scores": [
+        0.6743914969947071,
+        0.6649418851091071,
+        0.6600231912829803,
+        0.6355114601037092,
+        0.6299625914273871,
+        0.6020321568930984,
+        0.5806235564627911,
+        0.5682622059266161,
+        0.5585583208467481,
+        0.5178901819161785
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "How does the layering with `{{ config(enabled=var('layer', 'all')) }}` affect the testing and scheduling of my dbt models?",
+      "timestamp": "2026-01-16T01:15:51.674219",
+      "user_id": null,
+      "similarity_scores": [
+        0.831743662026337,
+        0.722174680037564,
+        0.5915241564399818,
+        0.5822441518505554,
+        0.577065129985659,
+        0.5766967774804445,
+        0.567600536946245,
+        0.5487741313073748,
+        0.5081697118662494,
+        0.4939191881525442
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "What are the different types of testing supported within dbt, and how do I define custom tests beyond the generic ones?",
+      "timestamp": "2026-01-16T01:16:04.845475",
+      "user_id": null,
+      "similarity_scores": [
+        0.6877651715842006,
+        0.6832036824131265,
+        0.6789418126632335,
+        0.6611272074929861,
+        0.6226073251766022,
+        0.6091824114013413,
+        0.6084818416914923,
+        0.5929756880034971,
+        0.592256845705494,
+        0.5895204134557259
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "Can you explain the refresh cadences for the business marts, and how those relate to the core layer and staging layer?",
+      "timestamp": "2026-01-16T01:16:19.568143",
+      "user_id": null,
+      "similarity_scores": [
+        0.6076176536086012,
+        0.6034463967251465,
+        0.587955203109614,
+        0.5843085834134519,
+        0.5842995965026927,
+        0.5780916632850376,
+        0.5773149017289056,
+        0.5744066568162148,
+        0.5698464866339723,
+        0.56207937124316
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "What is the purpose of the staging sources and freshness documentation, and how does it relate to the overall data pipeline?",
+      "timestamp": "2026-01-16T01:16:34.357767",
+      "user_id": null,
+      "similarity_scores": [
+        0.663747443354623,
+        0.635284505806782,
+        0.6121287709758466,
+        0.6049559145726695,
+        0.6040933652229235,
+        0.5857040318393822,
+        0.5818404628978907,
+        0.5790773490666905,
+        0.5743788026956974,
+        0.5731416713028123
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "How do I track the lineage of my dbt models, and how does the Confluence embed feature support this?",
+      "timestamp": "2026-01-16T01:16:45.777069",
+      "user_id": null,
+      "similarity_scores": [
+        0.6526316055451759,
+        0.6472504291681999,
+        0.6423883988889821,
+        0.6325729965024405,
+        0.603167561035957,
+        0.5949830525003375,
+        0.5875399415266989,
+        0.5843335165372153,
+        0.5817854251001735,
+        0.5668264832577355
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "What are the key considerations when defining requirements for a new product, as outlined in the Template - Product requirements page?",
+      "timestamp": "2026-01-16T01:17:03.392697",
+      "user_id": null,
+      "similarity_scores": [
+        0.6356973159670437,
+        0.6289328200845336,
+        0.584027700957654,
+        0.5817618049257969,
+        0.5816210882016517,
+        0.5773023131681634,
+        0.5770464176479634,
+        0.5654668563288455,
+        0.5641272849204463,
+        0.562993757543392
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "How do I use the Template - Decision documentation to ensure decisions are clearly recorded and understood across my team?",
+      "timestamp": "2026-01-16T01:17:38.189481",
+      "user_id": null,
+      "similarity_scores": [
+        0.6382698640300625,
+        0.6147806985767184,
+        0.5996723141330044,
+        0.5951222115801803,
+        0.5783785925521437,
+        0.5754360591013017,
+        0.5754360591013017,
+        0.5735448891002776,
+        0.572401559795302,
+        0.5678288493745582
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "What\u2019s the difference between the staging layer and the core layer, and how does this layering impact data transformations?",
+      "timestamp": "2026-01-16T01:17:55.378684",
+      "user_id": null,
+      "similarity_scores": [
+        0.7086755273482052,
+        0.657951328048597,
+        0.6562981323741481,
+        0.6556690880898314,
+        0.6365208232500266,
+        0.6268642924151545,
+        0.6268220363120861,
+        0.6203143247724792,
+        0.60895715738288,
+        0.6084596831758813
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "How do I define a new business mart, including specifying the business owner, key consumers, and refresh cadence?",
+      "timestamp": "2026-01-16T01:18:11.073372",
+      "user_id": null,
+      "similarity_scores": [
+        0.6072737285453359,
+        0.5957502861258349,
+        0.5871511471208161,
+        0.5709204369446937,
+        0.5658252159879915,
+        0.5540396073060022,
+        0.5498563166537775,
+        0.5431912844388904,
+        0.5396587018117954,
+        0.5312069016706626
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "What are the different sources used in the ingestion pipelines, and how are they connected to the Airflow DAGs for hourly updates?",
+      "timestamp": "2026-01-16T01:18:30.905335",
+      "user_id": null,
+      "similarity_scores": [
+        0.5893313538332307,
+        0.5701230407679423,
+        0.5696411551281518,
+        0.5662859310108576,
+        0.5605736389670625,
+        0.5555324027302933,
+        0.5467404928274269,
+        0.5455524157949122,
+        0.5430652741159308,
+        0.5395612460617487
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "How does the `{{ config(enabled=var('layer', 'all')) }}` layering system affect the testing and scheduling of dbt models?",
+      "timestamp": "2026-01-16T01:26:08.919290",
+      "user_id": null,
+      "similarity_scores": [
+        0.8173789665599871,
+        0.7183129993279153,
+        0.6082878997157251,
+        0.5936779441031222,
+        0.5830502397262022,
+        0.5809674137330773,
+        0.5737355206285836,
+        0.5579027145143655,
+        0.5105019520521228,
+        0.49099996763531517
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "What are the different refresh cadences for the sales, marketing, and finance analytics marts, and how do they relate to the key consumers of each mart?",
+      "timestamp": "2026-01-16T01:26:21.369899",
+      "user_id": null,
+      "similarity_scores": [
+        0.6888759894043305,
+        0.6777902911322025,
+        0.6482357933461367,
+        0.6460370283188304,
+        0.6431970786527693,
+        0.6142768042317661,
+        0.6126187816102411,
+        0.5642294231935745,
+        0.5622103912043103,
+        0.5617084218573091
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "Can you provide an example of a custom test that could be used within a dbt model, beyond the generic tests provided?",
+      "timestamp": "2026-01-16T01:26:33.093262",
+      "user_id": null,
+      "similarity_scores": [
+        0.6613870406944484,
+        0.6533505190455249,
+        0.635774605149023,
+        0.6190422924214953,
+        0.6152588030620421,
+        0.5715503092444786,
+        0.5701636095472727,
+        0.5670848755809611,
+        0.5646410439030476,
+        0.5604714679290961
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "What is the purpose of the Staging Layer, and how does it integrate with the Core Dimensions and Business marts?",
+      "timestamp": "2026-01-16T01:26:44.968032",
+      "user_id": null,
+      "similarity_scores": [
+        0.6413115896918294,
+        0.6181478338754477,
+        0.6057229872343093,
+        0.597576201845186,
+        0.5921799143055034,
+        0.5788973660764545,
+        0.5728828705509327,
+        0.5687903825743301,
+        0.5683468401886028,
+        0.5682793637568513
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "How do the Ingestion Pipelines define the frequency and tools used for data loading, and can you explain the difference between Monolith and Third-Party sources?",
+      "timestamp": "2026-01-16T01:26:59.310643",
+      "user_id": null,
+      "similarity_scores": [
+        0.6407482695645231,
+        0.6265550824451638,
+        0.6218031706030296,
+        0.6191761732977931,
+        0.6146357375453128,
+        0.6139053836113683,
+        0.6019346981822312,
+        0.5892476144948963,
+        0.5870739988904702,
+        0.5846910038376694
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "What are the key considerations when defining a 'Requirement' in the template, including the importance, user story, and Jira issue linkage?",
+      "timestamp": "2026-01-16T01:27:11.619898",
+      "user_id": null,
+      "similarity_scores": [
+        0.6389278646558673,
+        0.5797448546579327,
+        0.5772513011566939,
+        0.5723590135359202,
+        0.5705026818322955,
+        0.5695248922332597,
+        0.5638225353120877,
+        0.5610112077124909,
+        0.5579599484428298,
+        0.5484209387878684
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "How does the documentation define the process for generating lineage diagrams using dbt, and how can these diagrams be embedded into Confluence pages?",
+      "timestamp": "2026-01-16T01:27:22.211697",
+      "user_id": null,
+      "similarity_scores": [
+        0.6857820535860548,
+        0.685487718700904,
+        0.6808972382591607,
+        0.6749401307765851,
+        0.5951158632524447,
+        0.5939125282108174,
+        0.593803800358903,
+        0.5836539866614341,
+        0.5820642051010774,
+        0.5762429636416981
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "What are the different source types defined in the `models/staging/sources.yml` file, and how do they contribute to testing and lineage tracking?",
+      "timestamp": "2026-01-16T01:27:34.902221",
+      "user_id": null,
+      "similarity_scores": [
+        0.7562658656439254,
+        0.6480269185307441,
+        0.6341311783116421,
+        0.6239525160606888,
+        0.6095404126120993,
+        0.5885288497387267,
+        0.5790791094354742,
+        0.5773735676618234,
+        0.5726546013772648,
+        0.5679031170646434
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "How do the core dimensions relate to the business goals and key consumers of the analytics marts?",
+      "timestamp": "2026-01-16T01:27:47.517817",
+      "user_id": null,
+      "similarity_scores": [
+        0.7343115925211252,
+        0.7060737179584801,
+        0.6582741599799163,
+        0.6244927428379184,
+        0.613161233100732,
+        0.6029551754615364,
+        0.5943643063561891,
+        0.5867963340156178,
+        0.5846552736962378,
+        0.5815597399799829
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "What is the recommended approach for documenting meeting notes, and how can the \"Untitled live doc 2026-01-15\" document be used effectively?",
+      "timestamp": "2026-01-16T01:28:05.296006",
+      "user_id": null,
+      "similarity_scores": [
+        0.6632219804179256,
+        0.6519120177608028,
+        0.6173329873081059,
+        0.6014853061442783,
+        0.5840432254516972,
+        0.5739422499219317,
+        0.5703968776008682,
+        0.5689157264529899,
+        0.5637046749930797,
+        0.5585740964261308
+      ],
+      "num_documents": 10
     }
   ]
 }

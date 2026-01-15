@@ -151,7 +151,7 @@ async def query_knowledge_base(request: QueryRequest):
                 source_page_title = first_meta.get("title")
                 source_document = first_meta.get("filename")
         
-        # Detect gaps with source information
+        # Detect gaps with source information (pass metadatas for advanced detection)
         gap = gap_detector.detect_gap(
             query=request.question,
             answer=rag_result["answer"],
@@ -160,7 +160,8 @@ async def query_knowledge_base(request: QueryRequest):
             user_id=request.user_id,
             source_page_id=source_page_id,
             source_page_title=source_page_title,
-            source_document=source_document
+            source_document=source_document,
+            metadatas=rag_result.get("metadatas", [])
         )
         
         # Build response
@@ -719,7 +720,7 @@ async def analyze_all_confluence_data(request: AnalyzeConfluenceRequest = Analyz
                     print(f"   ⚠️  Warning: No source found for question, using fallback")
                     # Don't set to None, let it be None so gap detector can handle it
                 
-                # Detect gaps
+                # Detect gaps (pass metadatas for advanced detection)
                 gap = gap_detector.detect_gap(
                     query=question,
                     answer=rag_result["answer"],
@@ -727,7 +728,8 @@ async def analyze_all_confluence_data(request: AnalyzeConfluenceRequest = Analyz
                     retrieved_documents=rag_result["retrieved_documents"],
                     source_page_id=source_page_id,
                     source_page_title=source_page_title,
-                    source_document=source_document
+                    source_document=source_document,
+                    metadatas=rag_result.get("metadatas", [])
                 )
                 
                 if gap:

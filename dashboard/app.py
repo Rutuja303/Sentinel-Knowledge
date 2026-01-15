@@ -1052,6 +1052,64 @@ def main():
         
         st.markdown("---")
         
+        # Gap Type Descriptions - 5 Types
+        st.markdown("### Gap Type Descriptions")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("""
+            **1️⃣ Missing Knowledge Gap**
+            
+            Knowledge does not exist at all in Confluence. No relevant pages retrieved, very low similarity scores, AI cannot ground an answer.
+            
+            **Example:** "How do we rollback payment service?" → ❌ No documented rollback procedure found
+            
+            **Business Risk:** High incident risk, Heavy SME dependency
+            
+            ---
+            
+            **2️⃣ Incomplete Knowledge Gap**
+            
+            Knowledge exists, but does not fully answer the question. A page explains what something is, but not how or who owns it.
+            
+            **Example:** Page explains what rollback is, but not how or who owns it
+            
+            **Business Risk:** Operational delays, Misinterpretation
+            """)
+        
+        with col2:
+            st.markdown("""
+            **3️⃣ Consistency Gap**
+            
+            Multiple docs contradict each other. Two pages describe different procedures or conflicting information.
+            
+            **Example:** Two pages describe different rollback steps
+            
+            **Business Risk:** Confusion, Execution errors
+            
+            ---
+            
+            **4️⃣ Fragmented Knowledge Gap**
+            
+            Information is spread across multiple pages, none complete on their own. One page has steps, another has prerequisites, another has owners.
+            
+            **Example:** Steps in one page, prerequisites in another, owners in third
+            
+            **Business Risk:** Context loss, Onboarding friction
+            
+            ---
+            
+            **5️⃣ Discoverability Gap**
+            
+            Knowledge exists, but users cannot find it. Poor titles, wrong labels, hidden deep in hierarchy.
+            
+            **Example:** Documentation exists but low similarity scores indicate poor discoverability
+            
+            **Business Risk:** Wasted time, Duplicate docs creation
+            """)
+        
+        st.markdown("---")
+        
         # Filters
         with st.expander("Filters & Search", expanded=True):
             col1, col2, col3 = st.columns(3)
@@ -1060,7 +1118,14 @@ def main():
             with col2:
                 gap_type_filter = st.selectbox(
                     "Filter by Gap Type",
-                    ["All", "low_similarity", "repeated_query", "uncertainty", "empty_retrieval"],
+                    [
+                        "All",
+                        "missing_knowledge",
+                        "incomplete_knowledge",
+                        "consistency_gap",
+                        "fragmented_knowledge",
+                        "discoverability_gap"
+                    ],
                     index=0
                 )
             with col3:
@@ -1128,7 +1193,11 @@ def main():
             
             df["source_file"] = df.apply(get_source_info, axis=1)
             
-            display_df = df[["query", "gap_type", "severity", "occurrence_count", "priority_score", "suggested_topic", "source_file"]].copy()
+            # Format gap type for display (replace underscores with spaces, capitalize)
+            df_display = df.copy()
+            df_display["gap_type_display"] = df_display["gap_type"].str.replace("_", " ").str.title()
+            
+            display_df = df_display[["query", "gap_type_display", "severity", "occurrence_count", "priority_score", "suggested_topic", "source_file"]].copy()
             display_df.columns = ["Query", "Type", "Severity", "Occurrences", "Priority", "Suggested Topic", "Source File/Page"]
             
             st.dataframe(
