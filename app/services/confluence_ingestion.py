@@ -22,10 +22,15 @@ class ConfluenceIngestionService:
         if cloud is None:
             cloud = '.atlassian.net' in config.CONFLUENCE_URL or '.atlassian.com' in config.CONFLUENCE_URL
         
+        # Clean URL - remove /wiki if present
+        base_url = config.CONFLUENCE_URL.replace("/wiki", "").rstrip("/")
+        
+        # Use 'token' parameter for API tokens (not 'password')
+        # This is the correct way for Confluence Cloud API tokens
         self.confluence = Confluence(
-            url=config.CONFLUENCE_URL,
+            url=base_url,
             username=config.CONFLUENCE_USERNAME,
-            password=config.CONFLUENCE_API_TOKEN,
+            token=config.CONFLUENCE_API_TOKEN,  # Use 'token' for API tokens
             cloud=cloud
         )
         self.html_converter = html2text.HTML2Text()
@@ -101,6 +106,16 @@ class ConfluenceIngestionService:
             pages = []
             start = 0
             batch_size = 50
+            
+            # First, verify we can access the space
+            try:
+                space_info = self.confluence.get_space(space_key)
+                print(f"✅ Accessing space: {space_info.get('name', space_key)}")
+            except Exception as e:
+                error_str = str(e)
+                if "403" in error_str or "FORBIDDEN" in error_str:
+                    raise Exception(f"403 FORBIDDEN - You don't have permission to access space '{space_key}'. Please check:\n1. Your account has access to this space in Confluence\n2. The space key is correct\n3. Your API token has the right permissions")
+                raise
             
             while True:
                 results = self.confluence.get_all_pages_from_space(

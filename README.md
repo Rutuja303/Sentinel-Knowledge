@@ -283,58 +283,29 @@ with open("my-doc.pdf", "rb") as f:
 
 ## ⚙️ Configuration
 
-Edit `.env` to customize:
+Edit `.env` to customize. See [Configuration Guide](./docs/SETUP.md#configuration) for details.
 
+**Quick Configuration:**
 ```env
-# OpenAI Settings
-OPENAI_API_KEY=your_key_here
-EMBEDDING_MODEL=text-embedding-ada-002
-LLM_MODEL=gpt-3.5-turbo
+# LLM Provider (ollama = free, openai = paid)
+LLM_PROVIDER=ollama
+
+# Ollama (Free & Local)
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_LLM_MODEL=llama3.1:8b
+OLLAMA_EMBEDDING_MODEL=nomic-embed-text
 
 # Confluence Integration (Optional)
 CONFLUENCE_URL=https://your-domain.atlassian.net
 CONFLUENCE_USERNAME=your-email@example.com
 CONFLUENCE_API_TOKEN=your_confluence_api_token
-CONFLUENCE_SPACE_KEY=  # Optional: specific space key
-
-# Gap Detection Thresholds
-MIN_SIMILARITY_SCORE=0.3          # Minimum similarity to avoid gap detection
-REPEATED_QUERY_THRESHOLD=3        # Number of similar queries to trigger gap
-UNCERTAINTY_PHRASES=I'm not sure,I don't have information  # Comma-separated
-
-# Paths
-CHROMA_DB_PATH=./chroma_db
-DOCUMENTS_PATH=./data/documents
+CONFLUENCE_SPACE_KEY=  # Optional: specific space key (e.g., HR, SOP, ENG)
 ```
 
-### Setting Up Confluence Integration
-
-1. **Get Confluence API Token:**
-   - Go to https://id.atlassian.com/manage-profile/security/api-tokens
-   - Click "Create API token"
-   - Copy the token
-
-2. **Find Your Confluence URL:**
-   - Your Confluence URL format: `https://your-domain.atlassian.net`
-   - Or `https://your-domain.atlassian.com` for cloud
-
-3. **Add to .env:**
-   ```env
-   CONFLUENCE_URL=https://your-domain.atlassian.net
-   CONFLUENCE_USERNAME=your-email@example.com
-   CONFLUENCE_API_TOKEN=your_api_token_here
-   ```
-
-4. **Ingest Confluence Pages:**
-   ```bash
-   # List all spaces
-   curl http://localhost:8000/confluence/spaces
-   
-   # Ingest from a space
-   curl -X POST http://localhost:8000/ingest/confluence \
-     -H "Content-Type: application/json" \
-     -d '{"space_key": "YOUR_SPACE_KEY"}'
-   ```
+**For detailed configuration, see:**
+- [Ollama Setup](./docs/OLLAMA_SETUP.md) - Free local LLM
+- [Confluence Setup](./docs/CONFLUENCE_SETUP.md) - Confluence integration
+- [API Keys Guide](./docs/API_KEYS_GUIDE.md) - All API keys needed
 
 ## 🧪 Testing the System
 
@@ -355,12 +326,26 @@ DOCUMENTS_PATH=./data/documents
 - ✅ Streamlit dashboard
 - ✅ Query analytics
 
+## 📚 Documentation
+
+All detailed documentation is available in the [`docs/`](./docs/) directory:
+
+- **[API Keys Guide](./docs/API_KEYS_GUIDE.md)** - How to get and configure API keys
+- **[Setup Guide](./docs/SETUP.md)** - Detailed setup instructions
+- **[Quick Start](./docs/QUICKSTART.md)** - 5-minute quick start guide
+- **[Ollama Setup](./docs/OLLAMA_SETUP.md)** - Free local LLM setup
+- **[Confluence Setup](./docs/CONFLUENCE_SETUP.md)** - Confluence integration guide
+- **[Confluence Space Key Examples](./docs/CONFLUENCE_SPACE_KEY_EXAMPLE.md)** - Space key reference
+- **[Dashboard Features](./docs/DASHBOARD_FEATURES.md)** - Dashboard functionality
+- **[Dynamic Questions](./docs/DYNAMIC_QUESTIONS.md)** - How question generation works
+- **[Troubleshooting](./docs/CONFLUENCE_TROUBLESHOOTING.md)** - Common issues and solutions
+
 ## 🚧 Future Enhancements
 
 - [ ] Support for more document formats (Excel, PowerPoint)
 - [ ] Multi-user authentication
 - [ ] Email notifications for high-severity gaps
-- [ ] Integration with Confluence/SharePoint
+- [x] Integration with Confluence ✅
 - [ ] Advanced analytics and reporting
 - [ ] Export gaps to CSV/PDF
 - [ ] Slack/Teams integration

@@ -12,48 +12,606 @@ API_BASE_URL = "http://localhost:8000"
 st.set_page_config(
     page_title="AI Knowledge Gap Detector",
     page_icon="🧠",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# Initialize theme in session state
+if 'theme' not in st.session_state:
+    st.session_state.theme = 'light'
+
+# Theme CSS function
+def get_theme_css(theme):
+    """Generate CSS based on selected theme"""
+    if theme == 'dark':
+        return """
+        <style>
+        /* Dark Theme */
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b;
+            --bg-input: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --border-color: #334155;
+            --accent: #3b82f6;
+        }
+        
+        /* Hide Streamlit default elements */
+        #MainMenu {visibility: hidden !important;}
+        footer {visibility: hidden !important;}
+        header {visibility: hidden !important;}
+        .stDeployButton {display: none !important;}
+        [data-testid="stHeader"] {display: none !important;}
+        [data-testid="stToolbar"] {display: none !important;}
+        [data-testid="stDecoration"] {display: none !important;}
+        
+        /* Main background */
+        .stApp {
+            background-color: var(--bg-primary) !important;
+        }
+        
+        .main .block-container {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            max-width: 1400px;
+            background-color: var(--bg-primary);
+        }
+        
+        /* Sidebar */
+        [data-testid="stSidebar"] {
+            background-color: var(--bg-secondary) !important;
+        }
+        
+        [data-testid="stSidebar"] > div:first-child {
+            background-color: var(--bg-secondary) !important;
+        }
+        
+        [data-testid="stSidebar"] * {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Text colors */
+        .main *,
+        p, span, div, label, h1, h2, h3, h4, h5, h6,
+        .stMarkdown,
+        .element-container {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Header */
+        .main-header {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.03em;
+            line-height: 1.2;
+        }
+        
+        .sub-header {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+            font-weight: 400;
+        }
+        
+        /* Section headers */
+        h2 {
+            color: var(--text-primary) !important;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        h3 {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Cards */
+        .gap-card {
+            background: var(--bg-card) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+        
+        .answer-container {
+            background: var(--bg-card) !important;
+            border-left: 5px solid var(--accent) !important;
+        }
+        
+        /* Input fields */
+        .stTextInput > div > div > input {
+            background-color: var(--bg-input) !important;
+            color: var(--text-primary) !important;
+            border: 1.5px solid var(--border-color) !important;
+        }
+        
+        .stTextInput > div > div > input:focus {
+            border-color: var(--accent) !important;
+        }
+        
+        /* Select boxes */
+        .stSelectbox > div > div > select {
+            background-color: var(--bg-input) !important;
+            color: var(--text-primary) !important;
+            border: 1.5px solid var(--border-color) !important;
+        }
+        
+        /* Sliders */
+        .stSlider > div > div {
+            background-color: var(--bg-input) !important;
+        }
+        
+        /* Buttons */
+        .stButton > button {
+            background-color: var(--accent) !important;
+            color: #ffffff !important;
+        }
+        
+        /* Radio buttons */
+        [data-testid="stRadio"] label {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Expander */
+        .streamlit-expanderHeader {
+            background-color: var(--bg-card) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        /* Metrics */
+        [data-testid="stMetricValue"] {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-testid="stMetricLabel"] {
+            color: var(--text-secondary) !important;
+        }
+        
+        /* Dataframe */
+        .dataframe {
+            background-color: var(--bg-card) !important;
+        }
+        
+        /* Tech badge */
+        .tech-badge {
+            background: var(--bg-secondary) !important;
+            color: var(--text-secondary) !important;
+            border: 1px solid var(--border-color) !important;
+        }
+        </style>
+        """
+    else:
+        return """
+        <style>
+        /* Light Theme */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --border-color: #e2e8f0;
+            --accent: #667eea;
+        }
+        
+        /* Hide Streamlit default elements */
+        #MainMenu {visibility: hidden !important;}
+        footer {visibility: hidden !important;}
+        header {visibility: hidden !important;}
+        .stDeployButton {display: none !important;}
+        [data-testid="stHeader"] {display: none !important;}
+        [data-testid="stToolbar"] {display: none !important;}
+        [data-testid="stDecoration"] {display: none !important;}
+        
+        /* Main background */
+        .stApp {
+            background-color: var(--bg-primary) !important;
+        }
+        
+        .main .block-container {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            max-width: 1400px;
+        }
+        
+        /* Sidebar */
+        [data-testid="stSidebar"] {
+            background-color: #ffffff !important;
+        }
+        
+        [data-testid="stSidebar"] > div:first-child {
+            background-color: #ffffff !important;
+        }
+        
+        [data-testid="stSidebar"] * {
+            color: #1e293b !important;
+        }
+        
+        /* Text colors */
+        .main *,
+        p, span, div, label, h1, h2, h3, h4, h5, h6,
+        .stMarkdown,
+        .element-container {
+            color: #1e293b !important;
+        }
+        
+        /* Header */
+        .main-header {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.03em;
+            line-height: 1.2;
+        }
+        
+        .sub-header {
+            font-size: 1rem;
+            color: #64748b;
+            margin-bottom: 2.5rem;
+            font-weight: 400;
+        }
+        
+        /* Section headers */
+        h2 {
+            color: #1e293b !important;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        h3 {
+            color: #1e293b !important;
+        }
+        
+        /* Cards */
+        .gap-card {
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        
+        .answer-container {
+            background: #f8fafc !important;
+            border-left: 5px solid #667eea !important;
+        }
+        
+        /* Input fields - Light theme specific */
+        .stTextInput > div > div > input {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+            border: 1.5px solid #e2e8f0 !important;
+        }
+        
+        .stTextInput > div > div > input::placeholder {
+            color: #94a3b8 !important;
+        }
+        
+        .stTextInput > div > div > input:focus {
+            border-color: #667eea !important;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+            color: #1e293b !important;
+        }
+        
+        /* Select boxes - Light theme specific - More specific selectors */
+        div[data-baseweb="select"] {
+            background-color: #ffffff !important;
+        }
+        
+        div[data-baseweb="select"] > div {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        .stSelectbox > div > div > div {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        .stSelectbox > div > div > select {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+            border: 1.5px solid #e2e8f0 !important;
+        }
+        
+        .stSelectbox > div > div > select option {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        /* BaseWeb select styling */
+        [data-baseweb="select"] {
+            background-color: #ffffff !important;
+        }
+        
+        [data-baseweb="select"] > div {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        [data-baseweb="select"] input {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        /* Select box text visibility */
+        .stSelectbox label {
+            color: #1e293b !important;
+        }
+        
+        .stSelectbox [data-baseweb="select"] {
+            background-color: #ffffff !important;
+        }
+        
+        .stSelectbox [data-baseweb="select"] > div {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        /* Sliders - Light theme specific */
+        .stSlider > div > div {
+            background-color: #ffffff !important;
+        }
+        
+        .stSlider > div > div > div {
+            background-color: #ffffff !important;
+        }
+        
+        /* Buttons - Light theme specific */
+        .stButton > button {
+            background-color: #667eea !important;
+            color: #ffffff !important;
+        }
+        
+        .stButton > button:hover {
+            background-color: #5568d3 !important;
+        }
+        
+        /* Radio buttons - Light theme specific */
+        [data-testid="stRadio"] label {
+            color: #1e293b !important;
+        }
+        
+        /* Expander - Light theme specific */
+        .streamlit-expanderHeader {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        .streamlit-expanderContent {
+            background-color: #ffffff !important;
+        }
+        
+        [data-testid="stExpander"] {
+            background-color: #ffffff !important;
+        }
+        
+        /* Sidebar buttons - Light theme specific */
+        [data-testid="stSidebar"] .stButton > button {
+            background-color: #667eea !important;
+            color: #ffffff !important;
+        }
+        
+        [data-testid="stSidebar"] .stButton > button:hover {
+            background-color: #5568d3 !important;
+        }
+        
+        /* Question suggestion buttons in Query Interface */
+        [data-testid="stButton"] > button {
+            background-color: #667eea !important;
+            color: #ffffff !important;
+        }
+        
+        [data-testid="stButton"] > button:hover {
+            background-color: #5568d3 !important;
+        }
+        
+        /* Ensure all input text is visible - More specific */
+        input[type="text"],
+        input[type="search"],
+        input[type="text"]:focus,
+        textarea {
+            color: #1e293b !important;
+            background-color: #ffffff !important;
+        }
+        
+        /* BaseWeb Select Component - More aggressive targeting */
+        [data-baseweb="select"] {
+            background-color: #ffffff !important;
+        }
+        
+        [data-baseweb="select"] > div {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        [data-baseweb="select"] > div > div {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        [data-baseweb="select"] input {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        [data-baseweb="select"] span {
+            color: #1e293b !important;
+        }
+        
+        /* Select box dropdown menu */
+        [role="listbox"] {
+            background-color: #ffffff !important;
+        }
+        
+        [role="option"] {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        [role="option"]:hover {
+            background-color: #f1f5f9 !important;
+            color: #1e293b !important;
+        }
+        
+        /* Additional BaseWeb overrides */
+        .stSelectbox [data-baseweb="select"] > div[aria-selected="true"] {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        .stSelectbox [data-baseweb="select"] > div[aria-selected="false"] {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        /* Metrics */
+        [data-testid="stMetricValue"] {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-testid="stMetricLabel"] {
+            color: var(--text-secondary) !important;
+        }
+        
+        /* Dataframe */
+        .dataframe {
+            background-color: var(--bg-card) !important;
+        }
+        
+        /* Tech badge */
+        .tech-badge {
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+            border: 1px solid var(--border-color) !important;
+        }
+        </style>
+        """
+
+# Apply theme CSS
+st.markdown(get_theme_css(st.session_state.theme), unsafe_allow_html=True)
+
+# Additional shared CSS
 st.markdown("""
     <style>
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #1f77b4;
-        margin-bottom: 1rem;
-    }
+    /* Professional gap cards */
     .gap-card {
-        padding: 1rem;
-        border-radius: 0.5rem;
-        border-left: 4px solid;
-        margin: 0.5rem 0;
-    }
-    .gap-high {
-        background-color: #fee;
-        border-color: #f44;
-    }
-    .gap-medium {
-        background-color: #ffe;
-        border-color: #fa4;
-    }
-    .gap-low {
-        background-color: #efe;
-        border-color: #4a4;
-    }
-    .suggested-question-btn {
-        margin: 0.25rem 0;
-        text-align: left;
-        font-size: 0.9rem;
-    }
-    .stButton > button {
-        border-radius: 0.5rem;
+        padding: 1.5rem;
+        border-radius: 10px;
+        border-left: 5px solid;
+        margin: 1rem 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         transition: all 0.3s ease;
     }
-    .stButton > button:hover {
+    
+    .gap-card:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .gap-high {
+        border-left-color: #ef4444;
+        background: linear-gradient(90deg, rgba(239, 68, 68, 0.05) 0%, var(--bg-card) 100%);
+    }
+    
+    .gap-medium {
+        border-left-color: #f59e0b;
+        background: linear-gradient(90deg, rgba(245, 158, 11, 0.05) 0%, var(--bg-card) 100%);
+    }
+    
+    .gap-low {
+        border-left-color: #10b981;
+        background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, var(--bg-card) 100%);
+    }
+    
+    /* Tech badge styling */
+    .tech-badge {
+        display: inline-block;
+        padding: 0.35rem 0.85rem;
+        border-radius: 6px;
+        font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    /* Status indicators */
+    .status-online {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        background: #10b981;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+    }
+    
+    .status-offline {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        background: #ef4444;
+        border-radius: 50%;
+        margin-right: 0.5rem;
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+    }
+    
+    /* Answer container */
+    .answer-container {
+        padding: 1.75rem;
+        border-radius: 10px;
+        margin: 1.5rem 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        line-height: 1.7;
+    }
+    
+    /* Professional buttons */
+    .stButton > button {
+        border-radius: 8px;
+        border: none;
+        padding: 0.6rem 1.75rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    /* Input fields */
+    .stTextInput > div > div > input {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+    }
+    
+    .stTextInput > div > div > input:focus {
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    /* Metrics styling */
+    [data-testid="stMetricValue"] {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    /* Divider styling */
+    hr {
+        margin: 2rem 0;
+        border: none;
+        border-top: 1px solid var(--border-color);
+    }
+    
+    /* Theme toggle button positioning */
+    .theme-toggle-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 999;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -66,12 +624,11 @@ def fetch_gaps(severity: str = None, limit: int = 20):
         params = {"limit": limit}
         if severity:
             params["severity"] = severity
-        response = requests.get(f"{API_BASE_URL}/gaps", params=params)
+        response = requests.get(f"{API_BASE_URL}/gaps", params=params, timeout=5)
         if response.status_code == 200:
             return response.json()
         return []
-    except Exception as e:
-        st.error(f"Error fetching gaps: {e}")
+    except:
         return []
 
 
@@ -79,26 +636,23 @@ def fetch_gaps(severity: str = None, limit: int = 20):
 def fetch_statistics():
     """Fetch gap statistics from API"""
     try:
-        response = requests.get(f"{API_BASE_URL}/gaps/stats")
+        response = requests.get(f"{API_BASE_URL}/gaps/stats", timeout=5)
         if response.status_code == 200:
             return response.json()
         return {}
-    except Exception as e:
-        st.error(f"Error fetching statistics: {e}")
+    except:
         return {}
 
 
-@st.cache_data(ttl=300)  # Cache for 5 minutes since questions are based on content
+@st.cache_data(ttl=300)
 def fetch_suggested_questions(num_questions: int = 15):
     """Fetch suggested questions from API"""
     try:
-        response = requests.get(f"{API_BASE_URL}/suggested-questions", params={"num_questions": num_questions})
+        response = requests.get(f"{API_BASE_URL}/suggested-questions", params={"num_questions": num_questions}, timeout=5)
         if response.status_code == 200:
             return response.json()
         return []
-    except Exception as e:
-        st.warning(f"Could not fetch suggested questions: {e}")
-        # Return fallback questions
+    except:
         return [
             "How do we handle deployment rollbacks?",
             "What is our incident response procedure?",
@@ -115,221 +669,302 @@ def query_knowledge_base(question: str, user_id: str = None):
         if user_id:
             payload["user_id"] = user_id
         
-        response = requests.post(f"{API_BASE_URL}/query", json=payload)
+        response = requests.post(f"{API_BASE_URL}/query", json=payload, timeout=30)
         if response.status_code == 200:
             return response.json()
         return None
     except Exception as e:
-        st.error(f"Error querying knowledge base: {e}")
         return None
 
 
+def check_api_health():
+    """Check API health status"""
+    try:
+        response = requests.get(f"{API_BASE_URL}/health", timeout=5)
+        if response.status_code == 200:
+            return True, response.json()
+        return False, None
+    except:
+        return False, None
+
+
 def main():
-    st.markdown('<div class="main-header">🧠 AI Knowledge Gap Detector</div>', unsafe_allow_html=True)
-    st.markdown("**Your company doesn't know what it doesn't know — until now.**")
+    # Theme Toggle Button - Upper Right Corner
+    # Use a container approach with proper column weights
+    header_col1, header_col2 = st.columns([20, 1])
+    
+    with header_col1:
+        # Professional Header
+        st.markdown('<div class="main-header">Sentinel Knowledge</div>', unsafe_allow_html=True)
+    
+    with header_col2:
+        # Theme toggle button
+        current_theme = st.session_state.theme
+        if current_theme == 'light':
+            if st.button("🌙", key="theme_toggle", help="Switch to dark theme", use_container_width=True):
+                st.session_state.theme = 'dark'
+                st.rerun()
+        else:
+            if st.button("☀️", key="theme_toggle", help="Switch to light theme", use_container_width=True):
+                st.session_state.theme = 'light'
+                st.rerun()
+    
+    # Sub-header
+    st.markdown('<div class="sub-header">Intelligent RAG system with automated knowledge gap detection and analysis</div>', unsafe_allow_html=True)
+    
+    st.markdown("<br>", unsafe_allow_html=True)  # Add spacing
     
     # Sidebar
     with st.sidebar:
-        st.header("Navigation")
+        st.markdown("### Navigation")
         page = st.radio(
             "Select Page",
             ["Dashboard", "Query Interface", "Gap Analysis"],
-            index=0
+            index=0,
+            label_visibility="collapsed"
         )
         
         st.divider()
-        st.header("API Status")
-        try:
-            response = requests.get(f"{API_BASE_URL}/health")
-            if response.status_code == 200:
-                st.success("✅ API Connected")
-                health_data = response.json()
-                st.json(health_data)
-            else:
-                st.error("❌ API Error")
-        except:
-            st.error("❌ Cannot connect to API")
-            st.info("Make sure the FastAPI server is running on port 8000")
+        
+        st.markdown("### System Status")
+        api_healthy, health_data = check_api_health()
+        
+        if api_healthy:
+            st.markdown('<span class="status-online"></span><strong style="color: #10b981;">API Online</strong>', unsafe_allow_html=True)
+            if health_data:
+                vector_count = health_data.get("vector_store", {}).get("total_documents", 0)
+                st.caption(f"Vector Store: **{vector_count}** documents")
+        else:
+            st.markdown('<span class="status-offline"></span><strong style="color: #ef4444;">API Offline</strong>', unsafe_allow_html=True)
+            st.caption("Start the API server to enable features")
+        
+        st.divider()
+        
+        st.markdown("### Quick Actions")
+        if st.button("Refresh Data", use_container_width=True):
+            st.cache_data.clear()
+            st.rerun()
+        
+        if st.button("API Documentation", use_container_width=True):
+            st.markdown(f"[Open API Docs]({API_BASE_URL}/docs)")
     
     # Dashboard Page
     if page == "Dashboard":
-        st.header("📊 Knowledge Gap Dashboard")
+        st.markdown("## Dashboard Overview")
+        st.caption("Real-time insights into your knowledge base and detected gaps")
         
         # Fetch statistics
         stats = fetch_statistics()
         
-        if stats:
-            col1, col2, col3, col4 = st.columns(4)
-            
-            with col1:
-                st.metric("Total Queries", stats.get("total_queries", 0))
-            
-            with col2:
-                st.metric("Knowledge Gaps", stats.get("total_gaps", 0))
-            
-            with col3:
-                gap_rate = stats.get("gap_rate", 0)
-                st.metric("Gap Rate", f"{gap_rate:.1%}")
-            
-            with col4:
-                high_severity = stats.get("severity_breakdown", {}).get("high", 0)
-                st.metric("High Severity Gaps", high_severity, delta=None)
-            
-            st.divider()
-            
-            # Gap type breakdown
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.subheader("Gap Types")
-                gap_types = stats.get("gap_types", {})
-                if gap_types:
-                    fig = px.pie(
-                        values=list(gap_types.values()),
-                        names=list(gap_types.keys()),
-                        title="Distribution of Gap Types"
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.info("No gap data available")
-            
-            with col2:
-                st.subheader("Severity Breakdown")
-                severity = stats.get("severity_breakdown", {})
-                if severity:
-                    fig = px.bar(
-                        x=list(severity.keys()),
-                        y=list(severity.values()),
-                        title="Gaps by Severity",
-                        labels={"x": "Severity", "y": "Count"}
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.info("No severity data available")
+        # Key Metrics
+        st.markdown("### Key Metrics")
+        col1, col2, col3, col4 = st.columns(4)
         
-        # Top Gaps
+        with col1:
+            total_queries = stats.get("total_queries", 0) if stats else 0
+            st.metric("Total Queries", f"{total_queries:,}")
+        
+        with col2:
+            total_gaps = stats.get("total_gaps", 0) if stats else 0
+            st.metric("Knowledge Gaps", f"{total_gaps:,}")
+        
+        with col3:
+            gap_rate = stats.get("gap_rate", 0) if stats else 0
+            st.metric("Gap Rate", f"{gap_rate:.1%}" if gap_rate > 0 else "0%")
+        
+        with col4:
+            high_severity = stats.get("severity_breakdown", {}).get("high", 0) if stats else 0
+            st.metric("High Severity", f"{high_severity:,}")
+        
         st.divider()
-        st.subheader("🔴 Top Knowledge Gaps")
+        
+        # Visualizations
+        st.markdown("### Analytics")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### Gap Type Distribution")
+            if stats and stats.get("gap_types"):
+                gap_types = stats.get("gap_types", {})
+                fig = px.pie(
+                    values=list(gap_types.values()),
+                    names=list(gap_types.keys()),
+                    color_discrete_sequence=['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe']
+                )
+                fig.update_layout(
+                    showlegend=True,
+                    margin=dict(l=20, r=20, t=20, b=20),
+                    font=dict(size=12),
+                    height=350
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("No gap type data available. Start querying to generate insights.")
+        
+        with col2:
+            st.markdown("#### Severity Breakdown")
+            if stats and stats.get("severity_breakdown"):
+                severity = stats.get("severity_breakdown", {})
+                fig = px.bar(
+                    x=list(severity.keys()),
+                    y=list(severity.values()),
+                    labels={"x": "Severity Level", "y": "Count"},
+                    color=list(severity.keys()),
+                    color_discrete_map={"high": "#ef4444", "medium": "#f59e0b", "low": "#10b981"}
+                )
+                fig.update_layout(
+                    showlegend=False,
+                    margin=dict(l=20, r=20, t=20, b=20),
+                    font=dict(size=12),
+                    height=350
+                )
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("No severity data available. Start querying to generate insights.")
+        
+        # Top Gaps Section
+        st.divider()
+        st.markdown("### Top Knowledge Gaps")
+        st.caption("Most critical knowledge gaps requiring attention")
         
         gaps = fetch_gaps(limit=10)
         
         if gaps:
             for gap in gaps:
                 severity_class = f"gap-{gap['severity']}"
+                severity_emoji = {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(gap['severity'], "⚪")
+                
                 st.markdown(f"""
                     <div class="gap-card {severity_class}">
-                        <strong>{gap['query']}</strong><br>
-                        <small>Type: {gap['gap_type']} | Occurrences: {gap['occurrence_count']} | 
-                        Severity: {gap['severity'].upper()}</small><br>
-                        <small>Suggested Topic: {gap.get('suggested_topic', 'N/A')}</small>
+                        <strong style="font-size: 1.1rem;">{severity_emoji} {gap['query']}</strong><br>
+                        <div style="margin-top: 0.75rem; font-size: 0.9rem; color: var(--text-secondary);">
+                            <span class="tech-badge">{gap['gap_type']}</span>
+                            <span style="margin: 0 0.75rem; color: var(--border-color);">•</span>
+                            <span>Occurrences: <strong style="color: var(--text-primary);">{gap['occurrence_count']}</strong></span>
+                            <span style="margin: 0 0.75rem; color: var(--border-color);">•</span>
+                            <span>Severity: <strong style="color: var(--text-primary);">{gap['severity'].upper()}</strong></span>
+                        </div>
+                        <div style="margin-top: 0.75rem; font-size: 0.9rem; color: var(--text-secondary);">
+                            Suggested Topic: {gap.get('suggested_topic', 'N/A')}
+                        </div>
                     </div>
                 """, unsafe_allow_html=True)
         else:
-            st.info("No knowledge gaps detected yet. Try asking some questions!")
+            st.info("**No knowledge gaps detected yet.**")
+            st.markdown("""
+            **Getting Started:**
+            1. Ingest documents or Confluence pages via the API
+            2. Ask questions via the Query Interface
+            3. Gaps will be automatically detected and displayed here
+            """)
     
     # Query Interface
     elif page == "Query Interface":
-        st.header("💬 Query Knowledge Base")
+        st.markdown("## Query Knowledge Base")
+        st.caption("Ask questions about your documentation. The system will automatically detect knowledge gaps.")
         
         # Suggested Questions Section
-        st.subheader("💡 Suggested Questions")
-        st.markdown("Questions generated based on your knowledge base content. Click any question to use it.")
-        
-        # Fetch suggested questions from API (based on actual content)
-        with st.spinner("Loading suggested questions from your knowledge base..."):
-            suggested_questions = fetch_suggested_questions(num_questions=15)
-        
-        if not suggested_questions:
-            st.info("No content found in knowledge base. Please ingest some documents or Confluence pages first.")
-            suggested_questions = [
-                "How do we handle deployment rollbacks?",
-                "What is our incident response procedure?",
-                "How do we troubleshoot service failures?"
-            ]
-        
-        # Display suggested questions as clickable buttons
-        # Use a grid layout for better organization
-        num_cols = 3
-        cols = st.columns(num_cols)
-        
-        # Initialize session state for selected question if not exists
-        if 'selected_question' not in st.session_state:
-            st.session_state['selected_question'] = ""
-        
-        for idx, suggested_q in enumerate(suggested_questions):
-            col_idx = idx % num_cols
-            with cols[col_idx]:
-                # Truncate long questions for button text
-                button_text = suggested_q if len(suggested_q) <= 50 else suggested_q[:47] + "..."
-                if st.button(button_text, key=f"suggest_{idx}", use_container_width=True):
-                    st.session_state['selected_question'] = suggested_q
+        with st.expander("Suggested Questions", expanded=True):
+            st.caption("Questions generated from your knowledge base content. Click any question to use it.")
+            
+            with st.spinner("Loading suggested questions..."):
+                suggested_questions = fetch_suggested_questions(num_questions=15)
+            
+            if not suggested_questions:
+                st.info("No content in knowledge base. Please ingest documents first.")
+                suggested_questions = [
+                    "How do we handle deployment rollbacks?",
+                    "What is our incident response procedure?",
+                    "How do we troubleshoot service failures?"
+                ]
+            
+            num_cols = 3
+            cols = st.columns(num_cols)
+            
+            if 'selected_question' not in st.session_state:
+                st.session_state['selected_question'] = ""
+            
+            for idx, suggested_q in enumerate(suggested_questions):
+                col_idx = idx % num_cols
+                with cols[col_idx]:
+                    button_text = suggested_q if len(suggested_q) <= 50 else suggested_q[:47] + "..."
+                    if st.button(button_text, key=f"suggest_{idx}", use_container_width=True):
+                        st.session_state['selected_question'] = suggested_q
+                        st.rerun()
         
         st.divider()
         
-        # Question input with pre-filled value if a suggestion was clicked
+        # Query Input
+        st.markdown("### Ask a Question")
         question = st.text_input(
-            "Ask a question:", 
+            "Enter your question:",
             value=st.session_state.get('selected_question', ''),
-            placeholder="e.g., How do we roll back service X?",
-            key="question_input"
+            placeholder="e.g., How do we handle deployment rollbacks?",
+            key="question_input",
+            label_visibility="collapsed"
         )
         
-        # Clear session state after displaying (so it doesn't persist)
-        if st.session_state.get('selected_question'):
-            # Only clear if user hasn't modified the question
-            if question == st.session_state['selected_question']:
-                pass  # Keep it for now, will be cleared after query
-            else:
-                st.session_state['selected_question'] = ""
+        col1, col2 = st.columns([1, 5])
+        with col1:
+            query_clicked = st.button("Query", type="primary", use_container_width=True)
         
-        if st.button("Query", type="primary", use_container_width=True) and question:
-            # Clear selected question after query
+        if query_clicked and question:
             if 'selected_question' in st.session_state:
                 st.session_state['selected_question'] = ""
             
-            with st.spinner("Searching knowledge base..."):
+            with st.spinner("Analyzing knowledge base..."):
                 result = query_knowledge_base(question)
                 
                 if result:
-                    st.subheader("Answer")
-                    st.write(result["answer"])
+                    st.divider()
+                    st.markdown("### Answer")
                     
-                    # Show sources
+                    st.markdown(f"""
+                    <div class="answer-container">
+                        {result["answer"]}
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Sources
                     if result.get("sources"):
-                        with st.expander("Sources"):
+                        with st.expander("Source Documents", expanded=False):
                             for source in result["sources"]:
-                                st.write(f"📄 {source}")
+                                st.markdown(f"• `{source}`")
                     
-                    # Show confidence
-                    confidence = result.get("confidence_score", 0)
-                    st.progress(confidence, text=f"Confidence: {confidence:.1%}")
+                    # Confidence and Status
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        confidence = result.get("confidence_score", 0)
+                        st.metric("Confidence Score", f"{confidence:.1%}")
+                        st.progress(confidence)
                     
-                    # Gap detection indicator
-                    if result.get("is_gap"):
-                        st.error(f"⚠️ Knowledge Gap Detected: {result.get('gap_reason', 'Unknown reason')}")
-                    else:
-                        st.success("✅ Answer found in knowledge base")
+                    with col2:
+                        if result.get("is_gap"):
+                            st.error(f"**Knowledge Gap Detected**\n\n**Type:** `{result.get('gap_reason', 'Unknown')}`")
+                        else:
+                            st.success("**Answer Found**\n\nAnswer retrieved from knowledge base")
                     
-                    # Similarity scores
+                    # Technical Details
                     if result.get("similarity_scores"):
-                        with st.expander("Retrieval Details"):
-                            st.write("Similarity Scores:")
+                        with st.expander("Retrieval Metrics", expanded=False):
+                            st.markdown("**Similarity Scores:**")
                             for i, score in enumerate(result["similarity_scores"], 1):
-                                st.write(f"Document {i}: {score:.3f}")
+                                st.code(f"Document {i}: {score:.3f}")
+                else:
+                    st.error("**Failed to query knowledge base.**\n\nPlease check:\n- API server is running\n- Network connection\n- API endpoint is accessible")
+        elif query_clicked and not question:
+            st.warning("Please enter a question first.")
     
     # Gap Analysis
     elif page == "Gap Analysis":
-        st.header("🔍 Detailed Gap Analysis")
+        st.markdown("## Detailed Gap Analysis")
+        st.caption("Comprehensive analysis of detected knowledge gaps with advanced filtering and export capabilities")
         
-        # Enhanced Filters Section
-        with st.expander("🔧 Filters & Search", expanded=True):
+        # Filters
+        with st.expander("Filters & Search", expanded=True):
             col1, col2, col3 = st.columns(3)
             with col1:
-                severity_filter = st.selectbox(
-                    "Filter by Severity",
-                    ["All", "high", "medium", "low"],
-                    index=0
-                )
+                severity_filter = st.selectbox("Filter by Severity", ["All", "high", "medium", "low"], index=0)
             with col2:
                 gap_type_filter = st.selectbox(
                     "Filter by Gap Type",
@@ -337,33 +972,27 @@ def main():
                     index=0
                 )
             with col3:
-                limit = st.slider("Number of gaps to show", 5, 100, 20)
+                limit = st.slider("Results Limit", 5, 100, 20)
             
-            # Search functionality
-            search_query = st.text_input("🔍 Search gaps by query text:", placeholder="Type to search...")
+            search_query = st.text_input("Search", placeholder="Search gaps by query text...", label_visibility="collapsed")
         
-        # Fetch gaps
-        all_gaps = fetch_gaps(limit=1000)  # Fetch more for filtering
+        # Fetch and filter gaps
+        all_gaps = fetch_gaps(limit=1000)
         
         if all_gaps:
-            # Convert to DataFrame
             df = pd.DataFrame(all_gaps)
             
             # Apply filters
             if severity_filter != "All":
                 df = df[df["severity"] == severity_filter]
-            
             if gap_type_filter != "All":
                 df = df[df["gap_type"] == gap_type_filter]
-            
-            # Apply search filter
             if search_query:
                 df = df[df["query"].str.contains(search_query, case=False, na=False)]
             
-            # Limit results
             df = df.head(limit)
             
-            # Calculate priority score (combination of severity and occurrence)
+            # Calculate priority
             def calculate_priority(row):
                 severity_scores = {"high": 3, "medium": 2, "low": 1}
                 return severity_scores.get(row["severity"], 0) * row["occurrence_count"]
@@ -372,187 +1001,101 @@ def main():
             df = df.sort_values("priority_score", ascending=False)
             
             # Summary Metrics
-            st.subheader("📊 Summary Metrics")
+            st.markdown("### Summary Metrics")
             col1, col2, col3, col4 = st.columns(4)
             with col1:
-                st.metric("Total Gaps", len(df))
+                st.metric("Total Gaps", f"{len(df):,}")
             with col2:
                 high_priority = len(df[df["priority_score"] >= 6])
-                st.metric("High Priority", high_priority)
+                st.metric("High Priority", f"{high_priority:,}")
             with col3:
-                avg_occurrences = df["occurrence_count"].mean() if len(df) > 0 else 0
-                st.metric("Avg Occurrences", f"{avg_occurrences:.1f}")
+                avg_occ = df["occurrence_count"].mean() if len(df) > 0 else 0
+                st.metric("Avg Occurrences", f"{avg_occ:.1f}")
             with col4:
                 total_affected = df["occurrence_count"].sum() if len(df) > 0 else 0
-                st.metric("Total Affected Queries", total_affected)
+                st.metric("Total Affected", f"{total_affected:,}")
             
             st.divider()
             
-            # Export functionality
-            col1, col2 = st.columns([3, 1])
+            # Export and Table
+            col1, col2 = st.columns([4, 1])
             with col1:
-                st.subheader("📋 Gap Details")
+                st.markdown("### Gap Details")
             with col2:
-                # Export buttons
                 csv = df.to_csv(index=False).encode('utf-8')
-                st.download_button(
-                    "📥 Export CSV",
-                    csv,
-                    "knowledge_gaps.csv",
-                    "text/csv",
-                    key="download-csv"
-                )
+                st.download_button("Export CSV", csv, "knowledge_gaps.csv", "text/csv", use_container_width=True)
             
-            # Enhanced table with priority
             display_df = df[["query", "gap_type", "severity", "occurrence_count", "priority_score", "suggested_topic"]].copy()
-            display_df = display_df.rename(columns={
-                "query": "Query",
-                "gap_type": "Gap Type",
-                "severity": "Severity",
-                "occurrence_count": "Occurrences",
-                "priority_score": "Priority",
-                "suggested_topic": "Suggested Topic"
-            })
+            display_df.columns = ["Query", "Type", "Severity", "Occurrences", "Priority", "Suggested Topic"]
             
             st.dataframe(
                 display_df,
                 use_container_width=True,
-                height=400
+                height=400,
+                hide_index=True
             )
             
             st.divider()
             
-            # Enhanced Visualizations
+            # Visualizations
+            st.markdown("### Visualizations")
             col1, col2 = st.columns(2)
             
             with col1:
-                st.subheader("📈 Gaps by Type")
-                gap_type_counts = df["gap_type"].value_counts()
-                if len(gap_type_counts) > 0:
+                st.markdown("#### Gap Type Distribution")
+                if len(df) > 0:
+                    gap_type_counts = df["gap_type"].value_counts()
                     fig = px.pie(
                         values=gap_type_counts.values,
                         names=gap_type_counts.index,
-                        title="Distribution of Gap Types",
-                        color_discrete_map={
-                            "low_similarity": "#ff6b6b",
-                            "repeated_query": "#ffa500",
-                            "uncertainty": "#ffd93d",
-                            "empty_retrieval": "#6bcf7f"
-                        }
+                        color_discrete_sequence=px.colors.qualitative.Set3
                     )
+                    fig.update_layout(showlegend=True, margin=dict(l=20, r=20, t=20, b=20), height=350)
                     st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.info("No data to display")
             
             with col2:
-                st.subheader("📊 Top Queries by Priority")
-                top_queries = df.nlargest(10, "priority_score")
-                if len(top_queries) > 0:
+                st.markdown("#### Top Queries by Priority")
+                if len(df) > 0:
+                    top_queries = df.nlargest(10, "priority_score")
                     fig = px.bar(
                         x=top_queries["priority_score"],
                         y=top_queries["query"],
                         orientation='h',
-                        labels={"x": "Priority Score", "y": "Query"},
                         color=top_queries["severity"],
-                        color_discrete_map={"high": "#ff6b6b", "medium": "#ffa500", "low": "#6bcf7f"},
-                        title="Top 10 Gaps by Priority"
+                        color_discrete_map={"high": "#ef4444", "medium": "#f59e0b", "low": "#10b981"},
+                        labels={"x": "Priority Score", "y": ""}
                     )
-                    fig.update_layout(showlegend=False)
+                    fig.update_layout(showlegend=False, margin=dict(l=20, r=20, t=20, b=20), height=350)
                     st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.info("No data to display")
             
-            # Additional visualizations
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.subheader("📉 Occurrences Distribution")
-                if len(df) > 0:
-                    fig = px.histogram(
-                        df,
-                        x="occurrence_count",
-                        nbins=20,
-                        labels={"occurrence_count": "Number of Occurrences", "count": "Number of Gaps"},
-                        title="Distribution of Gap Occurrences"
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.info("No data to display")
-            
-            with col2:
-                st.subheader("🎯 Severity vs Occurrences")
-                if len(df) > 0:
-                    fig = px.scatter(
-                        df,
-                        x="occurrence_count",
-                        y="priority_score",
-                        color="severity",
-                        size="occurrence_count",
-                        hover_data=["query"],
-                        labels={"occurrence_count": "Occurrences", "priority_score": "Priority Score"},
-                        color_discrete_map={"high": "#ff6b6b", "medium": "#ffa500", "low": "#6bcf7f"},
-                        title="Gap Priority Analysis"
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-                else:
-                    st.info("No data to display")
-            
+            # Action Items
             st.divider()
+            st.markdown("### Recommended Action Items")
             
-            # Action Items Section
-            st.subheader("🎯 Recommended Action Items")
-            
-            # Generate action items based on gaps
             high_priority_gaps = df[df["priority_score"] >= 6].head(5)
-            
             if len(high_priority_gaps) > 0:
                 for idx, gap in high_priority_gaps.iterrows():
-                    with st.expander(f"🔴 Priority {int(gap['priority_score'])}: {gap['query'][:60]}..."):
+                    with st.expander(f"Priority {int(gap['priority_score'])}: {gap['query'][:70]}..."):
                         col1, col2 = st.columns(2)
                         with col1:
-                            st.write(f"**Gap Type:** {gap['gap_type']}")
-                            st.write(f"**Severity:** {gap['severity'].upper()}")
-                            st.write(f"**Occurrences:** {gap['occurrence_count']}")
+                            st.markdown(f"**Type:** `{gap['gap_type']}`")
+                            st.markdown(f"**Severity:** {gap['severity'].upper()}")
+                            st.markdown(f"**Occurrences:** {gap['occurrence_count']}")
                         with col2:
-                            st.write(f"**Suggested Topic:** {gap.get('suggested_topic', 'N/A')}")
-                            if gap.get('users_affected'):
-                                st.write(f"**Users Affected:** {len(gap['users_affected'])}")
+                            st.markdown(f"**Suggested Topic:** {gap.get('suggested_topic', 'N/A')}")
                         
-                        st.write("**Recommended Action:**")
+                        st.markdown("**Recommended Action:**")
                         if gap['gap_type'] == 'empty_retrieval':
-                            st.info(f"📝 Create documentation for: {gap.get('suggested_topic', gap['query'])}")
+                            st.info(f"**Create documentation** for: {gap.get('suggested_topic', gap['query'])}")
                         elif gap['gap_type'] == 'repeated_query':
-                            st.warning(f"⚠️ This question has been asked {gap['occurrence_count']} times. Create a FAQ or detailed guide.")
-                        elif gap['gap_type'] == 'low_similarity':
-                            st.warning(f"⚠️ Improve existing documentation on: {gap.get('suggested_topic', 'this topic')}")
+                            st.warning(f"**Create FAQ** - This question has been asked {gap['occurrence_count']} times")
                         else:
-                            st.info(f"📚 Review and enhance documentation related to: {gap.get('suggested_topic', gap['query'])}")
+                            st.info(f"**Enhance documentation** related to: {gap.get('suggested_topic', 'this topic')}")
             else:
-                st.success("✅ No high-priority gaps requiring immediate attention!")
-            
-            # Gap Trends (if we have date information)
-            if len(df) > 0 and 'first_detected' in df.columns:
-                st.divider()
-                st.subheader("📅 Gap Detection Timeline")
-                try:
-                    df['first_detected'] = pd.to_datetime(df['first_detected'])
-                    df['date'] = df['first_detected'].dt.date
-                    daily_gaps = df.groupby('date').size().reset_index(name='count')
-                    
-                    if len(daily_gaps) > 0:
-                        fig = px.line(
-                            daily_gaps,
-                            x='date',
-                            y='count',
-                            labels={'date': 'Date', 'count': 'Gaps Detected'},
-                            title='Gaps Detected Over Time',
-                            markers=True
-                        )
-                        st.plotly_chart(fig, use_container_width=True)
-                except:
-                    st.info("Date information not available for trend analysis")
+                st.success("**No high-priority gaps** requiring immediate attention!")
         else:
-            st.info("No gaps found with the selected filters. Try adjusting your filters or ask more questions to generate gap data.")
+            st.info("**No gaps found** with the selected filters.")
+            st.markdown("Try:\n- Adjusting your filters\n- Asking more questions to generate gap data")
 
 
 if __name__ == "__main__":
