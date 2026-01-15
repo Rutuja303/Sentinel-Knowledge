@@ -90,39 +90,58 @@ class QuestionGeneratorService:
             return []
     
     def generate_questions(self, num_questions: int = 15) -> List[str]:
-        """Generate suggested questions based on knowledge base content"""
+        """Generate suggested questions based on ALL knowledge base content"""
         try:
-            # Get topics and sample content
-            topics = self.get_document_topics(limit=30)
-            samples = self.get_sample_content(limit=10)
+            # Get ALL documents from the knowledge base (not just limited sample)
+            all_docs = self.embedding_service.get_all_documents(limit=1000)
+            
+            if not all_docs.get("documents") or len(all_docs.get("documents", [])) == 0:
+                print("⚠️  No documents in knowledge base for question generation")
+                return []
+            
+            # Get topics from ALL documents (increased limit)
+            topics = self.get_document_topics(limit=100)
+            samples = self.get_sample_content(limit=30)  # More samples for better coverage
             
             if not topics and not samples:
-                # Fallback to generic questions if no content
-                return self._get_fallback_questions()
+                print("⚠️  No topics or samples found for question generation")
+                return []
             
-            # Build context for question generation
-            topics_text = "\n".join([f"- {t['title']}" for t in topics[:20]])
-            samples_text = "\n".join([f"- {s}" for s in samples[:5]])
+            # Build comprehensive context for question generation
+            # Include all unique topics
+            unique_topics = list(set([t['title'] for t in topics]))
+            topics_text = "\n".join([f"- {title}" for title in unique_topics[:50]])
+            if len(unique_topics) > 50:
+                topics_text += f"\n... and {len(unique_topics) - 50} more topics"
             
-            # Generate questions using LLM
+            # Include diverse samples from different parts of the collection
+            samples_text = "\n".join([f"- {s}" for s in samples[:20]])
+            
+            print(f"📊 Generating {num_questions} questions from {len(unique_topics)} unique topics and {len(samples)} content samples")
+            
+            # Generate questions using LLM with comprehensive context
             prompt = f"""Based on the following documentation topics and content samples from our knowledge base, generate {num_questions} relevant questions that users might ask.
 
-Documentation Topics:
+Documentation Topics ({len(unique_topics)} total):
 {topics_text}
 
-Sample Content:
+Sample Content from various documents:
 {samples_text}
 
 Generate {num_questions} diverse, practical questions that:
-1. Are based on the actual topics and content shown
-2. Cover different aspects (how-to, what-is, troubleshooting, procedures)
+1. Are based EXCLUSIVELY on the actual topics and content shown above
+2. Cover different aspects (how-to, what-is, troubleshooting, procedures, configuration)
 3. Are phrased naturally as users would ask them
 4. Are specific and actionable
+5. Reference specific topics, processes, or concepts from the documentation
+6. Cover different files/topics, not just one area
+
+IMPORTANT: Only generate questions based on the topics and content provided. Do not use generic questions.
 
 Return only the questions, one per line, without numbering or bullets."""
 
             messages = [
-                SystemMessage(content="You are a helpful assistant that generates relevant questions based on documentation topics."),
+                SystemMessage(content="You are a helpful assistant that generates relevant questions based ONLY on the provided documentation topics and content. Never use generic or fallback questions."),
                 HumanMessage(content=prompt)
             ]
             
@@ -134,22 +153,26 @@ Return only the questions, one per line, without numbering or bullets."""
             for q in questions:
                 # Remove leading numbers, bullets, dashes
                 q = q.lstrip('0123456789.-) ').strip()
+                # Remove question marks if at start (some LLMs add them)
+                if q.startswith('?'):
+                    q = q[1:].strip()
                 if q and len(q) > 10:  # Filter out very short or empty questions
                     cleaned_questions.append(q)
             
-            # If we got fewer questions than requested, add fallbacks
-            if len(cleaned_questions) < num_questions:
-                fallbacks = self._get_fallback_questions()
-                for fq in fallbacks:
-                    if fq not in cleaned_questions and len(cleaned_questions) < num_questions:
-                        cleaned_questions.append(fq)
-            
-            return cleaned_questions[:num_questions]
+            # Return what we have (don't add fallbacks - only use actual generated questions)
+            if len(cleaned_questions) > 0:
+                print(f"✅ Generated {len(cleaned_questions)} questions from knowledge base content")
+                return cleaned_questions[:num_questions]
+            else:
+                print("⚠️  No valid questions generated")
+                return []
         
         except Exception as e:
-            print(f"Error generating questions: {e}")
-            # Return fallback questions on error
-            return self._get_fallback_questions()
+            print(f"❌ Error generating questions: {e}")
+            import traceback
+            traceback.print_exc()
+            # Return empty list instead of fallback - let user know they need data
+            return []
     
     def generate_questions_for_page(self, page_id: str, num_questions: int = 5) -> List[str]:
         """Generate questions specifically for a Confluence page"""
