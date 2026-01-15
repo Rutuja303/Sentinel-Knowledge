@@ -652,6 +652,11 @@ async def analyze_all_confluence_data(request: AnalyzeConfluenceRequest = Analyz
                 confluence_patterns = ["Missing schema", "Inconsistent", "Undefined entities", "sentiment mart", "mart", "schema"]
                 if any(pattern.lower() in gap.query.lower() for pattern in confluence_patterns):
                     is_confluence_gap = True
+            # Also remove gaps with no source information that look like they're from old question-based detection
+            elif not gap.source_page_id and not gap.source_page_title and not gap.source_document:
+                # If it's a repeated_query or has question-like format, it's likely from old detection
+                if gap.gap_type == "repeated_query" or gap.query.startswith(("What", "How", "When", "Where", "Why", "Who")):
+                    is_confluence_gap = True
             
             if is_confluence_gap:
                 confluence_gap_ids.append(gap_id)
@@ -669,6 +674,29 @@ async def analyze_all_confluence_data(request: AnalyzeConfluenceRequest = Analyz
         for gap_data in gaps_detected:
             gap_id = hashlib.md5(f"{gap_data['gap_type']}:{gap_data['gap_description']}".encode()).hexdigest()[:12]
             
+            # Ensure source information is set - try multiple sources
+            source_page_id = gap_data.get("source_page_id")
+            source_page_title = gap_data.get("source_page_title")
+            
+            # If source_page_title is missing, try to get it from source_documents
+            if not source_page_title and gap_data.get("source_documents"):
+                source_docs = gap_data.get("source_documents", [])
+                if source_docs:
+                    # Use the first source document title
+                    source_page_title = source_docs[0]
+                    # Try to find the page_id from unique_pages
+                    if source_page_title in unique_pages:
+                        source_page_id = unique_pages[source_page_title].get("page_id")
+            
+            # If still no source, try to infer from gap description
+            if not source_page_title:
+                # Look for document titles mentioned in the gap description
+                for page_title in unique_pages.keys():
+                    if page_title.lower() in gap_data["gap_description"].lower():
+                        source_page_title = page_title
+                        source_page_id = unique_pages[page_title].get("page_id")
+                        break
+            
             knowledge_gap = KnowledgeGap(
                 id=gap_id,
                 query=gap_data["gap_description"],  # The gap itself, not a question
@@ -679,8 +707,8 @@ async def analyze_all_confluence_data(request: AnalyzeConfluenceRequest = Analyz
                 last_detected=datetime.now(),
                 users_affected=[],
                 suggested_topic=gap_data.get("missing_items", [None])[0] if gap_data.get("missing_items") else None,
-                source_page_id=gap_data.get("source_page_id"),
-                source_page_title=gap_data.get("source_page_title"),
+                    source_page_id=source_page_id,
+                    source_page_title=source_page_title,
                 source_document=None
             )
             gap_detector.gaps[gap_id] = knowledge_gap
