@@ -54,10 +54,12 @@ class GapDetectorService:
     ) -> Optional[KnowledgeGap]:
         """Detect if a query represents a knowledge gap - detects 5 gap types:
         1. missing_knowledge - Knowledge does not exist
-        2. incomplete_knowledge - Knowledge exists but incomplete
+        2. incomplete_knowledge - Knowledge exists but incomplete (e.g., mentioned but not defined)
         3. consistency_gap - Conflicting information across documents
         4. fragmented_knowledge - Information spread across multiple pages
         5. discoverability_gap - Knowledge exists but hard to find
+        
+        Now focuses on cross-document inconsistencies and missing information rather than logical questions.
         """
         
         # Record query in history
@@ -79,25 +81,67 @@ class GapDetectorService:
             severity = "high"
             reason = "No relevant documents found - knowledge does not exist"
         
-        # 2️⃣ Incomplete Knowledge Gap - Uncertainty phrases in answer
+        # 2️⃣ Incomplete Knowledge Gap - Missing information or uncertainty phrases
         elif answer:
             answer_lower = answer.lower()
+            
+            # Check for uncertainty phrases
             for phrase in config.UNCERTAINTY_PHRASES:
                 if phrase.lower() in answer_lower:
                     gap_type = "incomplete_knowledge"
                     severity = "medium"
                     reason = f"Answer contains uncertainty phrase: '{phrase}' - knowledge exists but incomplete"
                     break
+            
+            # Check for missing information indicators (mentioned but not defined)
+            if not gap_type:
+                missing_indicators = [
+                    "not defined", "not found", "missing", "not mentioned", "not specified",
+                    "not documented", "not explained", "not covered", "not listed",
+                    "only", "but", "however", "whereas", "while", "although"
+                ]
+                # Check if answer suggests something is mentioned in one place but missing in another
+                if any(indicator in answer_lower for indicator in missing_indicators):
+                    # Check if multiple documents were retrieved (cross-document check)
+                    if metadatas and len(set(m.get("title", "") for m in metadatas if m.get("title"))) > 1:
+                        gap_type = "incomplete_knowledge"
+                        severity = "high"
+                        reason = "Item mentioned in one document but missing definition/explanation in another"
         
         # 3️⃣ Consistency Gap - Conflicting information across documents
         if not gap_type and len(retrieved_documents) > 1:
             # Check if answer contains contradiction indicators
-            contradiction_phrases = ["however", "but", "alternatively", "on the other hand", "contradicts", "conflicts", "different", "disagrees"]
+            contradiction_phrases = ["however", "but", "alternatively", "on the other hand", "contradicts", "conflicts", "different", "disagrees", "whereas", "while", "although", "inconsistent"]
             answer_lower = answer.lower() if answer else ""
-            if any(phrase in answer_lower for phrase in contradiction_phrases):
-                gap_type = "consistency_gap"
-                severity = "high"
-                reason = f"Conflicting information found across {len(retrieved_documents)} documents"
+            
+            # Also check if metadatas show different sources (cross-document inconsistency)
+            if metadatas:
+                unique_sources = set()
+                for meta in metadatas:
+                    source_title = meta.get("title") or meta.get("filename", "")
+                    if source_title:
+                        unique_sources.add(source_title)
+                
+                # If we have multiple sources and contradiction phrases, it's a consistency gap
+                if len(unique_sources) > 1 and any(phrase in answer_lower for phrase in contradiction_phrases):
+                    gap_type = "consistency_gap"
+                    severity = "high"
+                    reason = f"Conflicting information found across {len(unique_sources)} documents: {', '.join(list(unique_sources)[:3])}"
+                # Also check for explicit mentions of mismatches (e.g., "4 marts listed but only 3 defined")
+                elif len(unique_sources) > 1:
+                    mismatch_patterns = [
+                        r"(\d+)\s+(?:marts?|items?|entries?|definitions?|schemas?)\s+(?:listed|mentioned|found).*?but.*?(\d+)",
+                        r"(\d+)\s+.*?but.*?(\d+)\s+(?:defined|specified|documented)",
+                        r"missing.*?(?:schema|definition|explanation|details?)",
+                        r"not\s+(?:defined|specified|documented|explained|covered)"
+                    ]
+                    import re
+                    for pattern in mismatch_patterns:
+                        if re.search(pattern, answer_lower):
+                            gap_type = "consistency_gap"
+                            severity = "high"
+                            reason = f"Inconsistent information across documents: {answer[:100]}"
+                            break
         
         # 4️⃣ Fragmented Knowledge Gap - Information spread across multiple pages
         if not gap_type and similarity_scores and len(retrieved_documents) > 1:
@@ -130,8 +174,27 @@ class GapDetectorService:
                 severity = "high"
                 reason = f"Query asked {len(similar_queries)} times - suggests fragmented information"
         
-        # If gap detected, create or update gap record
+        # Filter out logical/abstract questions that don't represent documentation gaps
         if gap_type:
+            # Skip gaps from logical questions that require engineering judgment
+            logical_question_indicators = [
+                "how do", "how does", "how can", "how should", "how would",
+                "what is the purpose", "what is the relationship", "how relate",
+                "how align", "how connect", "how integrate", "how work together"
+            ]
+            query_lower = query.lower()
+            
+            # Check if this is a logical question (not a documentation gap)
+            is_logical_question = any(
+                indicator in query_lower and 
+                ("relate" in query_lower or "purpose" in query_lower or "goal" in query_lower or "align" in query_lower)
+                for indicator in logical_question_indicators
+            )
+            
+            # Only skip if it's a logical question AND not a clear inconsistency
+            if is_logical_question and gap_type not in ["consistency_gap", "incomplete_knowledge"]:
+                # This is a logical question, not a documentation gap - skip it
+                return None
             gap_id = self._generate_gap_id(query, gap_type)
             
             if gap_id in self.gaps:

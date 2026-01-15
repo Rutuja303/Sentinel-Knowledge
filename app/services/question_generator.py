@@ -269,10 +269,15 @@ Return only the questions, one per line, without numbering or bullets."""
             
             samples_text = "\n".join([f"- {s}" for s in samples[:15]])  # More samples
             
-            # Generate questions based on ALL Confluence content from ALL files
-            prompt = f"""Based on the following Confluence pages and content from your knowledge base, generate {num_questions} relevant questions that users might ask about this documentation.
+            # Generate questions focused on cross-document consistency and completeness checks
+            prompt = f"""Based on the following Confluence pages and content, generate {num_questions} questions that check for documentation gaps and inconsistencies.
 
-IMPORTANT: Generate questions that cover DIFFERENT files/pages, not just one file. Ensure questions are distributed across all the pages listed below.
+IMPORTANT: Focus on questions that detect:
+1. Missing information: Things mentioned in one document but not defined/explained in another
+2. Inconsistencies: Conflicting information between documents
+3. Incomplete coverage: Items listed in one place but missing details elsewhere
+
+DO NOT generate logical reasoning questions or questions that require engineering judgment.
 
 Confluence Pages ({len(all_titles)} total pages):
 {titles_text}
@@ -280,13 +285,22 @@ Confluence Pages ({len(all_titles)} total pages):
 Sample Content from various pages:
 {samples_text}
 
-Generate {num_questions} diverse questions that:
-1. Cover different topics across ALL the Confluence pages (not just one page)
-2. Include questions from at least {min(5, len(all_titles))} different pages/files
-3. Include how-to questions, what-is questions, troubleshooting questions
-4. Are phrased naturally as users would ask them
-5. Are specific and actionable
-6. Cover potential gaps in documentation across multiple files
+Generate {num_questions} questions that:
+1. Check if items mentioned in one document are fully defined in another (e.g., "Are all marts listed in Business marts page also defined in Mart Schemas?")
+2. Verify consistency of information across documents (e.g., "Do the mart names match between Business marts and Mart Schemas?")
+3. Check for missing definitions or explanations (e.g., "Is the sentiment mart schema defined?")
+4. Verify completeness of cross-references between documents
+5. Check for conflicting information about the same topic
+
+Examples of GOOD questions:
+- "Are all 4 marts from Business marts page defined in Mart Schemas?"
+- "What marts are mentioned in Business marts but missing schema definitions?"
+- "Do the refresh cadences in Business marts match the implementation details elsewhere?"
+
+Examples of BAD questions (DO NOT generate these):
+- "How do core dimensions relate to business goals?" (logical reasoning)
+- "What is the purpose of X?" (general question)
+- "How does Y work?" (requires engineering judgment)
 
 Return only the questions, one per line, without numbering or bullets."""
 
