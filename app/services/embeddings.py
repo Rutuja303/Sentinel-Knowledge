@@ -69,6 +69,19 @@ class EmbeddingService:
             "collection_name": self.collection.name
         }
     
+    def get_all_documents(self, limit: int = 100) -> Dict:
+        """Get all documents from the collection with metadata"""
+        try:
+            results = self.collection.get(limit=limit)
+            return {
+                "documents": results.get("documents", []),
+                "metadatas": results.get("metadatas", []),
+                "ids": results.get("ids", [])
+            }
+        except Exception as e:
+            print(f"Error getting documents: {e}")
+            return {"documents": [], "metadatas": [], "ids": []}
+    
     def delete_collection(self):
         """Delete the collection (for reset/testing)"""
         self.client.delete_collection(name="knowledge_base")

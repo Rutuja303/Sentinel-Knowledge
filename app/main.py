@@ -10,13 +10,15 @@ from app.services.confluence_ingestion import ConfluenceIngestionService
 from app.services.embeddings import EmbeddingService
 from app.services.rag import RAGService
 from app.services.gap_detector import GapDetectorService
+from app.services.question_generator import QuestionGeneratorService
 from app.utils.config import config
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 # Initialize services (lazy initialization to handle missing API keys gracefully)
 embedding_service = None
 rag_service = None
+question_generator = None
 gap_detector = GapDetectorService()
 ingestion_service = DocumentIngestionService()
 
@@ -25,13 +27,14 @@ confluence_service = None
 
 def initialize_services():
     """Initialize services that require API keys"""
-    global embedding_service, rag_service, confluence_service
+    global embedding_service, rag_service, question_generator, confluence_service
     
     try:
         if embedding_service is None:
             config.validate()  # This will raise if OPENAI_API_KEY is missing
             embedding_service = EmbeddingService()
             rag_service = RAGService(embedding_service)
+            question_generator = QuestionGeneratorService(embedding_service)
     except ValueError as e:
         print(f"⚠️  {str(e)}")
         print("   Please add your OPENAI_API_KEY to the .env file")
@@ -397,6 +400,42 @@ async def get_confluence_page(page_id: str):
         return page
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching Confluence page: {str(e)}")
+
+
+@app.get("/suggested-questions", response_model=List[str])
+async def get_suggested_questions(num_questions: int = 15):
+    """Get suggested questions based on knowledge base content"""
+    if embedding_service is None or question_generator is None:
+        initialize_services()
+        if embedding_service is None or question_generator is None:
+            # Return fallback questions if API key not configured
+            fallback_questions = [
+                "How do we handle deployment rollbacks?",
+                "What is our incident response procedure?",
+                "How do we troubleshoot service failures?",
+                "What are the steps for database migrations?",
+                "How do we handle payment gateway failures?",
+                "What is the process for code reviews?",
+                "How do we manage API rate limits?",
+                "What happens during a security breach?",
+                "How do we scale our infrastructure?",
+                "What is our disaster recovery plan?"
+            ]
+            return fallback_questions[:num_questions]
+    
+    try:
+        questions = question_generator.generate_questions(num_questions=num_questions)
+        return questions
+    except Exception as e:
+        # Return fallback on error
+        fallback_questions = [
+            "How do we handle deployment rollbacks?",
+            "What is our incident response procedure?",
+            "How do we troubleshoot service failures?",
+            "What are the steps for database migrations?",
+            "How do we handle payment gateway failures?"
+        ]
+        return fallback_questions[:num_questions]
 
 
 if __name__ == "__main__":
