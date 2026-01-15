@@ -103,40 +103,58 @@ class ConfluenceIngestionService:
     def get_all_pages_from_space(self, space_key: str, limit: int = 1000) -> List[Dict]:
         """Get all pages from a specific Confluence space"""
         try:
+            # Use direct HTTP request instead of library (library has auth issues)
+            import requests
+            from requests.auth import HTTPBasicAuth
+            
+            base_url = config.CONFLUENCE_URL.replace("/wiki", "").rstrip("/")
             pages = []
             start = 0
             batch_size = 50
             
-            # First, verify we can access the space
-            try:
-                space_info = self.confluence.get_space(space_key)
-                print(f"✅ Accessing space: {space_info.get('name', space_key)}")
-            except Exception as e:
-                error_str = str(e)
-                if "403" in error_str or "FORBIDDEN" in error_str:
-                    raise Exception(f"403 FORBIDDEN - You don't have permission to access space '{space_key}'. Please check:\n1. Your account has access to this space in Confluence\n2. The space key is correct\n3. Your API token has the right permissions")
-                raise
-            
-            while True:
-                results = self.confluence.get_all_pages_from_space(
-                    space=space_key,
-                    start=start,
-                    limit=batch_size,
-                    expand='body.storage,version,space'
+            while len(pages) < limit:
+                # Use Confluence REST API to get pages
+                api_url = f"{base_url}/wiki/rest/api/content"
+                params = {
+                    "spaceKey": space_key,
+                    "start": start,
+                    "limit": min(batch_size, limit - len(pages)),
+                    "expand": "body.storage,version,space"
+                }
+                
+                response = requests.get(
+                    api_url,
+                    auth=HTTPBasicAuth(config.CONFLUENCE_USERNAME, config.CONFLUENCE_API_TOKEN),
+                    headers={'Accept': 'application/json'},
+                    params=params,
+                    timeout=30
                 )
+                
+                if response.status_code != 200:
+                    if response.status_code == 403:
+                        raise Exception(f"403 FORBIDDEN - You don't have permission to access space '{space_key}'. Please check:\n1. Your account has access to this space in Confluence\n2. The space key is correct\n3. Your API token has the right permissions")
+                    raise Exception(f"API returned status {response.status_code}: {response.text[:200]}")
+                
+                data = response.json()
+                results = data.get('results', [])
                 
                 if not results:
                     break
                 
                 for page in results:
                     html_body = page.get('body', {}).get('storage', {}).get('value', '')
-                    text_content = self.html_to_text(html_body)
+                    text_content = self.html_to_text(html_body) if html_body else ''
+                    
+                    # Get web UI link
+                    webui_link = page.get('_links', {}).get('webui', '')
+                    if webui_link and not webui_link.startswith('http'):
+                        webui_link = f"{base_url}/wiki{webui_link}"
                     
                     pages.append({
                         "id": page.get('id'),
                         "title": page.get('title', 'Untitled'),
                         "content": text_content,
-                        "url": page.get('_links', {}).get('webui', ''),
+                        "url": webui_link,
                         "space": space_key,
                         "space_name": page.get('space', {}).get('name', ''),
                         "version": page.get('version', {}).get('number', 1),
@@ -159,7 +177,24 @@ class ConfluenceIngestionService:
     def get_all_spaces(self) -> List[Dict]:
         """Get all accessible Confluence spaces"""
         try:
-            spaces = self.confluence.get_all_spaces(start=0, limit=1000)
+            # Use direct HTTP request instead of library (library has auth issues)
+            import requests
+            from requests.auth import HTTPBasicAuth
+            
+            base_url = config.CONFLUENCE_URL.replace("/wiki", "").rstrip("/")
+            api_url = f"{base_url}/wiki/rest/api/space"
+            
+            response = requests.get(
+                api_url,
+                auth=HTTPBasicAuth(config.CONFLUENCE_USERNAME, config.CONFLUENCE_API_TOKEN),
+                headers={'Accept': 'application/json'},
+                timeout=30
+            )
+            
+            if response.status_code != 200:
+                raise Exception(f"API returned status {response.status_code}: {response.text[:200]}")
+            
+            data = response.json()
             return [
                 {
                     "key": space.get('key'),
@@ -167,7 +202,7 @@ class ConfluenceIngestionService:
                     "type": space.get('type'),
                     "description": space.get('description', {}).get('plain', {}).get('value', '')
                 }
-                for space in spaces.get('results', [])
+                for space in data.get('results', [])
             ]
         except Exception as e:
             raise Exception(f"Error fetching Confluence spaces: {str(e)}")

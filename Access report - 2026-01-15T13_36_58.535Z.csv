@@ -1,0 +1,9 @@
+Report name,Space access report,,,,,,
+Report created at,Thu Jan 15 13:36:58 UTC 2026,,,,,,
+Report created by,Yashraj Bhargava (),,,,,,
+User / group selected,Yashraj Bhargava,,,,,,
+"
+"
+Space Id,Space Name,Space Key,Space Type,Space Status,Access Level,As Individual User,As Member of Group
+196610,Yashraj Bhargava,~71202069f0cc3b810a4ea5907823951fffcb51,personal,CURRENT,admin,admin,
+229380,Software development,SD,global,CURRENT,admin,admin,

@@ -1,0 +1,18 @@
+# Exact curl command to list Confluence spaces
+
+# With verbose output (shows headers and connection details):
+curl -v 'https://yashbgv2002.atlassian.net/wiki/rest/api/space' \
+  -u 'yashbgv2002@gmail.com:YOUR_API_TOKEN_HERE' \
+  -H 'Accept: application/json'
+
+# Without verbose (cleaner output):
+curl 'https://yashbgv2002.atlassian.net/wiki/rest/api/space' \
+  -u 'yashbgv2002@gmail.com:YOUR_API_TOKEN_HERE' \
+  -H 'Accept: application/json'
+
+# Pretty formatted output:
+curl 'https://yashbgv2002.atlassian.net/wiki/rest/api/space' \
+  -u 'yashbgv2002@gmail.com:YOUR_API_TOKEN_HERE' \
+  -H 'Accept: application/json' | python3 -m json.tool
+
+# Replace YOUR_API_TOKEN_HERE with your actual API token from .env file

@@ -719,7 +719,7 @@ def main():
         st.markdown("### Navigation")
         page = st.radio(
             "Select Page",
-            ["Dashboard", "Query Interface", "Gap Analysis"],
+            ["Dashboard", "Query Interface", "Gap Analysis", "Confluence"],
             index=0,
             label_visibility="collapsed"
         )
@@ -1096,6 +1096,87 @@ def main():
         else:
             st.info("**No gaps found** with the selected filters.")
             st.markdown("Try:\n- Adjusting your filters\n- Asking more questions to generate gap data")
+    
+    # Confluence Integration Page
+    elif page == "Confluence":
+        st.markdown("## Confluence Integration")
+        st.caption("View and manage your Confluence spaces and pages")
+        
+        # Fetch Confluence spaces
+        @st.cache_data(ttl=300)
+        def fetch_confluence_spaces():
+            """Fetch Confluence spaces from API"""
+            try:
+                response = requests.get(f"{API_BASE_URL}/confluence/spaces", timeout=10)
+                if response.status_code == 200:
+                    return response.json()
+                return None
+            except Exception as e:
+                return None
+        
+        with st.spinner("Loading Confluence spaces..."):
+            confluence_data = fetch_confluence_spaces()
+        
+        if confluence_data:
+            spaces = confluence_data.get("spaces", [])
+            count = confluence_data.get("count", 0)
+            
+            st.markdown("### Available Spaces")
+            st.caption(f"Found {count} accessible Confluence space(s)")
+            
+            if spaces:
+                # Display spaces in cards
+                for space in spaces:
+                    space_type = space.get("type", "unknown")
+                    space_key = space.get("key", "")
+                    space_name = space.get("name", "Unnamed Space")
+                    
+                    with st.expander(f"📁 {space_name} ({space_type})", expanded=False):
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.markdown(f"**Space Key:** `{space_key}`")
+                            st.markdown(f"**Type:** {space_type}")
+                        with col2:
+                            # Button to view pages
+                            if st.button(f"View Pages", key=f"view_{space_key}", use_container_width=True):
+                                st.session_state[f"selected_space_{space_key}"] = True
+                        
+                        # Fetch and display pages if button clicked
+                        if st.session_state.get(f"selected_space_{space_key}", False):
+                            with st.spinner(f"Loading pages from {space_name}..."):
+                                try:
+                                    pages_response = requests.get(
+                                        f"{API_BASE_URL}/confluence/spaces/{space_key}/pages",
+                                        params={"limit": 50},
+                                        timeout=10
+                                    )
+                                    if pages_response.status_code == 200:
+                                        pages_data = pages_response.json()
+                                        pages = pages_data.get("pages", [])
+                                        st.markdown(f"**Pages in this space:** {len(pages)}")
+                                        
+                                        if pages:
+                                            for page in pages[:10]:  # Show first 10
+                                                st.markdown(f"• **{page.get('title', 'Untitled')}**")
+                                                if page.get('url'):
+                                                    st.caption(f"   [View in Confluence]({page.get('url')})")
+                                        else:
+                                            st.info("No pages found in this space.")
+                                    else:
+                                        st.warning(f"Could not load pages: {pages_response.status_code}")
+                                except Exception as e:
+                                    st.error(f"Error loading pages: {str(e)}")
+            else:
+                st.info("No spaces found. Make sure Confluence is configured correctly.")
+        else:
+            st.error("**Could not connect to Confluence**")
+            st.markdown("""
+            **Troubleshooting:**
+            1. Check that Confluence credentials are configured in `.env`
+            2. Verify the API server is running
+            3. Check API endpoint: `/confluence/spaces`
+            4. Ensure your IP is in the Confluence allowlist
+            """)
 
 
 if __name__ == "__main__":
