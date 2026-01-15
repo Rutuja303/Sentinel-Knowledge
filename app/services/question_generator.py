@@ -1,5 +1,4 @@
 from typing import List, Dict
-from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage
 from app.services.embeddings import EmbeddingService
 from app.utils.config import config
@@ -11,13 +10,24 @@ class QuestionGeneratorService:
     
     def __init__(self, embedding_service: EmbeddingService):
         config.validate()
-        os.environ["OPENAI_API_KEY"] = config.OPENAI_API_KEY
         
         self.embedding_service = embedding_service
-        self.llm = ChatOpenAI(
-            model=config.LLM_MODEL,
-            temperature=0.7  # Higher temperature for more creative questions
-        )
+        
+        # Initialize LLM based on provider
+        if config.LLM_PROVIDER == "ollama":
+            from langchain_ollama import ChatOllama
+            self.llm = ChatOllama(
+                model=config.OLLAMA_LLM_MODEL,
+                base_url=config.OLLAMA_BASE_URL,
+                temperature=0.7  # Higher temperature for more creative questions
+            )
+        else:  # OpenAI
+            from langchain_openai import ChatOpenAI
+            os.environ["OPENAI_API_KEY"] = config.OPENAI_API_KEY
+            self.llm = ChatOpenAI(
+                model=config.OPENAI_LLM_MODEL,
+                temperature=0.7
+            )
     
     def get_document_topics(self, limit: int = 50) -> List[Dict]:
         """Extract topics/titles from documents in the knowledge base"""

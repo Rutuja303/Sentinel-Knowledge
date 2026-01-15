@@ -7,10 +7,11 @@ python-dotenv==1.0.0
 # RAG & LLM
 langchain==0.1.0
 langchain-openai==0.0.2
-openai==1.6.1
+langchain-community==0.0.10
+langchain-ollama==0.0.1
 chromadb==0.4.22
 tiktoken==0.5.2
-langchain-community==0.0.10
+ollama==0.1.7
 
 # Document Processing
 pypdf2==3.0.1

@@ -1,5 +1,4 @@
 from typing import Dict, List, Tuple
-from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage
 from app.services.embeddings import EmbeddingService
 from app.utils.config import config
@@ -11,14 +10,23 @@ class RAGService:
     def __init__(self, embedding_service: EmbeddingService):
         config.validate()
         self.embedding_service = embedding_service
-        # API key is set in EmbeddingService, reuse it
         import os
-        os.environ["OPENAI_API_KEY"] = config.OPENAI_API_KEY
         
-        self.llm = ChatOpenAI(
-            model=config.LLM_MODEL,
-            temperature=0.1
-        )
+        # Initialize LLM based on provider
+        if config.LLM_PROVIDER == "ollama":
+            from langchain_ollama import ChatOllama
+            self.llm = ChatOllama(
+                model=config.OLLAMA_LLM_MODEL,
+                base_url=config.OLLAMA_BASE_URL,
+                temperature=0.1
+            )
+        else:  # OpenAI
+            from langchain_openai import ChatOpenAI
+            os.environ["OPENAI_API_KEY"] = config.OPENAI_API_KEY
+            self.llm = ChatOpenAI(
+                model=config.OPENAI_LLM_MODEL,
+                temperature=0.1
+            )
         
         # System prompt for the LLM
         self.system_prompt = """You are a helpful assistant that answers questions based on the provided context from company documentation.

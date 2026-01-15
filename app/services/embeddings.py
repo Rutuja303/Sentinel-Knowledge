@@ -1,7 +1,6 @@
 import chromadb
 from chromadb.config import Settings
 from typing import List, Dict, Optional
-from langchain_openai import OpenAIEmbeddings
 from app.utils.config import config
 
 
@@ -10,13 +9,21 @@ class EmbeddingService:
     
     def __init__(self):
         config.validate()
-        # Set API key as environment variable for langchain
         import os
-        os.environ["OPENAI_API_KEY"] = config.OPENAI_API_KEY
         
-        self.embeddings = OpenAIEmbeddings(
-            model=config.EMBEDDING_MODEL
-        )
+        # Initialize embeddings based on provider
+        if config.LLM_PROVIDER == "ollama":
+            from langchain_ollama import OllamaEmbeddings
+            self.embeddings = OllamaEmbeddings(
+                model=config.OLLAMA_EMBEDDING_MODEL,
+                base_url=config.OLLAMA_BASE_URL
+            )
+        else:  # OpenAI
+            from langchain_openai import OpenAIEmbeddings
+            os.environ["OPENAI_API_KEY"] = config.OPENAI_API_KEY
+            self.embeddings = OpenAIEmbeddings(
+                model=config.OPENAI_EMBEDDING_MODEL
+            )
         
         # Initialize ChromaDB
         self.client = chromadb.PersistentClient(
