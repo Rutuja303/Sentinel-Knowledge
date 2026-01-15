@@ -646,20 +646,17 @@ def fetch_statistics():
 
 @st.cache_data(ttl=300)
 def fetch_suggested_questions(num_questions: int = 15):
-    """Fetch suggested questions from API"""
+    """Fetch suggested questions from API (generated from knowledge base content)"""
     try:
-        response = requests.get(f"{API_BASE_URL}/suggested-questions", params={"num_questions": num_questions}, timeout=5)
+        response = requests.get(f"{API_BASE_URL}/suggested-questions", params={"num_questions": num_questions}, timeout=30)
         if response.status_code == 200:
-            return response.json()
+            questions = response.json()
+            if questions:
+                return questions
         return []
-    except:
-        return [
-            "How do we handle deployment rollbacks?",
-            "What is our incident response procedure?",
-            "How do we troubleshoot service failures?",
-            "What are the steps for database migrations?",
-            "How do we handle payment gateway failures?"
-        ]
+    except Exception as e:
+        print(f"Error fetching suggested questions: {e}")
+        return []  # Return empty list - questions should be generated from data, not hardcoded
 
 
 def query_knowledge_base(question: str, user_id: str = None):
@@ -872,29 +869,29 @@ def main():
             st.caption("Questions generated from your knowledge base content. Click any question to use it.")
             
             with st.spinner("Loading suggested questions..."):
-                suggested_questions = fetch_suggested_questions(num_questions=15)
+                suggested_questions = fetch_suggested_questions(num_questions=4)
             
             if not suggested_questions:
                 st.info("No content in knowledge base. Please ingest documents first.")
-                suggested_questions = [
-                    "How do we handle deployment rollbacks?",
-                    "What is our incident response procedure?",
-                    "How do we troubleshoot service failures?"
-                ]
-            
-            num_cols = 3
-            cols = st.columns(num_cols)
+                # Don't show hardcoded questions - let user know they need to ingest data
+                suggested_questions = []
             
             if 'selected_question' not in st.session_state:
                 st.session_state['selected_question'] = ""
             
-            for idx, suggested_q in enumerate(suggested_questions):
-                col_idx = idx % num_cols
-                with cols[col_idx]:
-                    button_text = suggested_q if len(suggested_q) <= 50 else suggested_q[:47] + "..."
-                    if st.button(button_text, key=f"suggest_{idx}", use_container_width=True):
-                        st.session_state['selected_question'] = suggested_q
-                        st.rerun()
+            # Display 3-4 questions in a clean layout
+            if suggested_questions:
+                # Use 2 columns for better display of 3-4 questions
+                num_cols = 2 if len(suggested_questions) <= 2 else 2
+                cols = st.columns(num_cols)
+                
+                for idx, suggested_q in enumerate(suggested_questions):
+                    col_idx = idx % num_cols
+                    with cols[col_idx]:
+                        button_text = suggested_q if len(suggested_q) <= 60 else suggested_q[:57] + "..."
+                        if st.button(button_text, key=f"suggest_{idx}", use_container_width=True):
+                            st.session_state['selected_question'] = suggested_q
+                            st.rerun()
         
         st.divider()
         

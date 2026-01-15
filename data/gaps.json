@@ -391,6 +391,20 @@
       "source_page_id": "229531",
       "source_page_title": "Template - Meeting notes",
       "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
+    },
+    "058b3395b42f": {
+      "id": "058b3395b42f",
+      "query": "How do we handle deployment rollbacks?",
+      "gap_type": "consistency_gap",
+      "severity": "high",
+      "occurrence_count": 1,
+      "first_detected": "2026-01-16 01:31:55.995535",
+      "last_detected": "2026-01-16 01:31:55.995540",
+      "users_affected": [],
+      "suggested_topic": "We Handle Deployment Rollbacks?",
+      "source_page_id": null,
+      "source_page_title": null,
+      "source_document": "SD-DBT Design Document_ Kimball Dimensional Architecture-150126-152234.pdf"
     }
   },
   "query_history": [
@@ -1473,6 +1487,24 @@
         0.5689157264529899,
         0.5637046749930797,
         0.5585740964261308
+      ],
+      "num_documents": 10
+    },
+    {
+      "query": "How do we handle deployment rollbacks?",
+      "timestamp": "2026-01-16T01:31:55.989122",
+      "user_id": null,
+      "similarity_scores": [
+        0.5109118745274895,
+        0.5063128577471447,
+        0.5049423210417656,
+        0.4960559426203679,
+        0.4933312802363763,
+        0.49241457382529785,
+        0.48950256519988367,
+        0.4879980120144327,
+        0.48653206450353714,
+        0.4858261671150246
       ],
       "num_documents": 10
     }

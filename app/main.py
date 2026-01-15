@@ -781,39 +781,26 @@ async def analyze_all_confluence_data(request: AnalyzeConfluenceRequest = Analyz
 
 
 @app.get("/suggested-questions", response_model=List[str])
-async def get_suggested_questions(num_questions: int = 15):
-    """Get suggested questions based on knowledge base content"""
+async def get_suggested_questions(num_questions: int = 4):
+    """Get suggested questions generated from knowledge base content (not hardcoded)"""
     if embedding_service is None or question_generator is None:
         initialize_services()
         if embedding_service is None or question_generator is None:
-            # Return fallback questions if API key not configured
-            fallback_questions = [
-                "How do we handle deployment rollbacks?",
-                "What is our incident response procedure?",
-                "How do we troubleshoot service failures?",
-                "What are the steps for database migrations?",
-                "How do we handle payment gateway failures?",
-                "What is the process for code reviews?",
-                "How do we manage API rate limits?",
-                "What happens during a security breach?",
-                "How do we scale our infrastructure?",
-                "What is our disaster recovery plan?"
-            ]
-            return fallback_questions[:num_questions]
+            # Return empty list - questions must be generated from data
+            return []
     
     try:
+        # Generate questions from actual knowledge base content
         questions = question_generator.generate_questions(num_questions=num_questions)
-        return questions
+        if questions:
+            return questions
+        else:
+            # No questions generated - likely no content in knowledge base
+            return []
     except Exception as e:
-        # Return fallback on error
-        fallback_questions = [
-            "How do we handle deployment rollbacks?",
-            "What is our incident response procedure?",
-            "How do we troubleshoot service failures?",
-            "What are the steps for database migrations?",
-            "How do we handle payment gateway failures?"
-        ]
-        return fallback_questions[:num_questions]
+        print(f"Error generating suggested questions: {e}")
+        # Return empty list instead of fallback - questions should come from data
+        return []
 
 
 if __name__ == "__main__":
