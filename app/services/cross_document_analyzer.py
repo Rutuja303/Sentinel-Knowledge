@@ -15,7 +15,15 @@ class CrossDocumentAnalyzer:
         
         # Organize documents by title and ID
         for i, metadata in enumerate(confluence_docs.get("metadatas", [])):
-            title = metadata.get("title", "Unknown")
+            # Try multiple fields to get the title - check title, page_title, name, filename, etc.
+            title = (metadata.get("title") or 
+                    metadata.get("page_title") or 
+                    metadata.get("name") or 
+                    metadata.get("filename") or 
+                    metadata.get("file_name") or
+                    metadata.get("document_title") or
+                    metadata.get("document") or
+                    f"Page {metadata.get('page_id', 'Unknown')}")
             page_id = metadata.get("page_id")
             doc_content = confluence_docs.get("documents", [])[i] if i < len(confluence_docs.get("documents", [])) else ""
             
@@ -190,15 +198,29 @@ class CrossDocumentAnalyzer:
                     missing_schemas.append(mart)
             
             if missing_schemas:
+                # Extract source title with fallback logic
+                business_marts_metadata = business_marts_doc.get("metadata", {})
+                business_marts_title = (business_marts_metadata.get("title") or 
+                                       business_marts_metadata.get("page_title") or 
+                                       business_marts_metadata.get("name") or
+                                       business_marts_metadata.get("filename") or
+                                       "Business marts")
+                
+                mart_schemas_metadata = mart_schemas_doc.get("metadata", {})
+                mart_schemas_title = (mart_schemas_metadata.get("title") or 
+                                     mart_schemas_metadata.get("page_title") or 
+                                     mart_schemas_metadata.get("name") or
+                                     mart_schemas_metadata.get("filename") or
+                                     "Mart Schemas")
+                
                 gaps.append({
                     "gap_description": f"Missing schema definitions: {', '.join([m.capitalize() for m in missing_schemas])} mart(s) are listed in 'Business marts' but do not have schema definitions in 'Mart Schemas'",
                     "gap_type": "incomplete_knowledge",
                     "severity": "high",
-                    "source_documents": [business_marts_doc.get("metadata", {}).get("title", "Business marts"), 
-                                       mart_schemas_doc.get("metadata", {}).get("title", "Mart Schemas")],
+                    "source_documents": [business_marts_title, mart_schemas_title],
                     "missing_items": missing_schemas,
                     "source_page_id": business_marts_doc.get("page_id"),
-                    "source_page_title": business_marts_doc.get("metadata", {}).get("title", "Business marts")
+                    "source_page_title": business_marts_title
                 })
         
         # Gap 2: Check for inconsistencies in counts
@@ -208,14 +230,28 @@ class CrossDocumentAnalyzer:
             if mart_schemas_doc:
                 schemas_count = len(mart_schemas_doc.get("schemas", []))
                 if marts_count != schemas_count:
+                    # Extract source title with fallback logic
+                    business_marts_metadata = business_marts_doc.get("metadata", {})
+                    business_marts_title = (business_marts_metadata.get("title") or 
+                                           business_marts_metadata.get("page_title") or 
+                                           business_marts_metadata.get("name") or
+                                           business_marts_metadata.get("filename") or
+                                           "Business marts")
+                    
+                    mart_schemas_metadata = mart_schemas_doc.get("metadata", {})
+                    mart_schemas_title = (mart_schemas_metadata.get("title") or 
+                                         mart_schemas_metadata.get("page_title") or 
+                                         mart_schemas_metadata.get("name") or
+                                         mart_schemas_metadata.get("filename") or
+                                         "Mart Schemas")
+                    
                     gaps.append({
                         "gap_description": f"Inconsistent mart count: 'Business marts' lists {marts_count} marts but 'Mart Schemas' only defines {schemas_count} schemas",
                         "gap_type": "consistency_gap",
                         "severity": "high",
-                        "source_documents": [business_marts_doc.get("metadata", {}).get("title", "Business marts"),
-                                           mart_schemas_doc.get("metadata", {}).get("title", "Mart Schemas")],
+                        "source_documents": [business_marts_title, mart_schemas_title],
                         "source_page_id": business_marts_doc.get("page_id"),
-                        "source_page_title": business_marts_doc.get("metadata", {}).get("title", "Business marts")
+                        "source_page_title": business_marts_title
                     })
         
         # Gap 3: Check for entities mentioned but not defined
@@ -241,14 +277,22 @@ class CrossDocumentAnalyzer:
                         undefined_entities.append(entity)
             
             if undefined_entities:
+                # Extract source title with fallback logic
+                doc_metadata = data.get("metadata", {})
+                source_title = (doc_metadata.get("title") or 
+                               doc_metadata.get("page_title") or 
+                               doc_metadata.get("name") or
+                               doc_metadata.get("filename") or
+                               title)  # Use the title from the loop if metadata doesn't have it
+                
                 gaps.append({
-                    "gap_description": f"Undefined entities in '{title}': {', '.join(undefined_entities[:5])} are mentioned but not clearly defined",
+                    "gap_description": f"Undefined entities in '{source_title}': {', '.join(undefined_entities[:5])} are mentioned but not clearly defined",
                     "gap_type": "incomplete_knowledge",
                     "severity": "medium",
-                    "source_documents": [title],
+                    "source_documents": [source_title],
                     "missing_items": undefined_entities[:5],
                     "source_page_id": data.get("page_id"),
-                    "source_page_title": title
+                    "source_page_title": source_title
                 })
         
         return gaps

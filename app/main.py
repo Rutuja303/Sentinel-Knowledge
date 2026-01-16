@@ -144,12 +144,56 @@ async def query_knowledge_base(request: QueryRequest):
             source_page_title = request.context.get("source_page_title")
             source_document = request.context.get("source_document")
         else:
-            # Try to extract from retrieved documents metadata
+            # Try to extract from retrieved documents metadata with robust fallback
             if rag_result.get("metadatas") and len(rag_result["metadatas"]) > 0:
-                first_meta = rag_result["metadatas"][0]
-                source_page_id = first_meta.get("page_id")
-                source_page_title = first_meta.get("title")
-                source_document = first_meta.get("filename")
+                # Try all metadatas, not just the first one
+                for meta in rag_result["metadatas"]:
+                    # Try multiple fields to get the title
+                    potential_title = (meta.get("title") or 
+                                      meta.get("page_title") or 
+                                      meta.get("name") or
+                                      meta.get("filename") or
+                                      meta.get("file_name") or
+                                      meta.get("document_title") or
+                                      meta.get("document") or
+                                      meta.get("space_name"))
+                    if potential_title and potential_title != "Unknown":
+                        source_page_title = potential_title
+                        source_page_id = meta.get("page_id")
+                        # Try multiple fields to get the document name
+                        source_document = (meta.get("filename") or
+                                          meta.get("file_name") or
+                                          meta.get("title") or
+                                          meta.get("page_title") or
+                                          meta.get("name") or
+                                          meta.get("document_title") or
+                                          meta.get("document") or
+                                          meta.get("space_name") or
+                                          potential_title)
+                        break
+                
+                # If still no source found, use first metadata with fallback
+                if not source_page_title and rag_result["metadatas"]:
+                    first_meta = rag_result["metadatas"][0]
+                    source_page_id = first_meta.get("page_id")
+                    source_page_title = (first_meta.get("title") or 
+                                        first_meta.get("page_title") or 
+                                        first_meta.get("name") or
+                                        first_meta.get("filename") or
+                                        first_meta.get("file_name") or
+                                        first_meta.get("document_title") or
+                                        first_meta.get("document") or
+                                        first_meta.get("space_name") or
+                                        (f"Page {source_page_id}" if source_page_id else "Document"))
+                    source_document = (first_meta.get("filename") or
+                                      first_meta.get("file_name") or
+                                      first_meta.get("title") or
+                                      first_meta.get("page_title") or
+                                      first_meta.get("name") or
+                                      first_meta.get("document_title") or
+                                      first_meta.get("document") or
+                                      first_meta.get("space_name") or
+                                      source_page_title)
         
         # Detect gaps with source information (pass metadatas for advanced detection)
         gap = gap_detector.detect_gap(
@@ -669,6 +713,28 @@ async def analyze_all_confluence_data(request: AnalyzeConfluenceRequest = Analyz
         for gap_data in gaps_detected:
             gap_id = hashlib.md5(f"{gap_data['gap_type']}:{gap_data['gap_description']}".encode()).hexdigest()[:12]
             
+            # Extract source information with robust fallback
+            source_page_title = gap_data.get("source_page_title")
+            source_page_id = gap_data.get("source_page_id")
+            
+            # Use source_page_title as source_document, or construct from available info
+            source_document = source_page_title
+            if not source_document and source_page_id:
+                # Try to find the title from unique_pages
+                page_info = unique_pages.get(source_page_id, {})
+                source_document = page_info.get("title") or f"Page {source_page_id}"
+            if not source_document:
+                # Last resort: use first source document from source_documents list
+                source_docs = gap_data.get("source_documents", [])
+                if source_docs:
+                    source_document = source_docs[0]
+                else:
+                    source_document = "Unknown"
+            
+            # Ensure source_page_title is set
+            if not source_page_title:
+                source_page_title = source_document
+            
             knowledge_gap = KnowledgeGap(
                 id=gap_id,
                 query=gap_data["gap_description"],  # The gap itself, not a question
@@ -679,9 +745,9 @@ async def analyze_all_confluence_data(request: AnalyzeConfluenceRequest = Analyz
                 last_detected=datetime.now(),
                 users_affected=[],
                 suggested_topic=gap_data.get("missing_items", [None])[0] if gap_data.get("missing_items") else None,
-                source_page_id=gap_data.get("source_page_id"),
-                source_page_title=gap_data.get("source_page_title"),
-                source_document=None
+                source_page_id=source_page_id,
+                source_page_title=source_page_title,
+                source_document=source_document
             )
             gap_detector.gaps[gap_id] = knowledge_gap
         

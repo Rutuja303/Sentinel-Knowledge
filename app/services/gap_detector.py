@@ -205,6 +205,32 @@ class GapDetectorService:
                 if user_id and user_id not in gap.users_affected:
                     gap.users_affected.append(user_id)
             else:
+                # Ensure we have source information - extract from metadatas if missing
+                if not source_page_title and not source_document and metadatas:
+                    for meta in metadatas:
+                        potential_title = (meta.get("title") or 
+                                         meta.get("page_title") or 
+                                         meta.get("name") or
+                                         meta.get("filename") or
+                                         meta.get("file_name") or
+                                         meta.get("document_title") or
+                                         meta.get("document") or
+                                         meta.get("space_name"))
+                        if potential_title and potential_title != "Unknown":
+                            if not source_page_title:
+                                source_page_title = potential_title
+                            if not source_document:
+                                source_document = potential_title
+                            if not source_page_id:
+                                source_page_id = meta.get("page_id")
+                            break
+                
+                # Final fallback - never use "Unknown"
+                if not source_page_title:
+                    source_page_title = source_document or (f"Page {source_page_id}" if source_page_id else "Document")
+                if not source_document:
+                    source_document = source_page_title or (f"Page {source_page_id}" if source_page_id else "Document")
+                
                 # Create new gap
                 gap = KnowledgeGap(
                     id=gap_id,

@@ -16,9 +16,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Initialize theme in session state
+# Initialize theme and page in session state
 if 'theme' not in st.session_state:
     st.session_state.theme = 'light'
+if 'current_page' not in st.session_state:
+    st.session_state.current_page = 'Dashboard'
 
 # Theme CSS function
 def get_theme_css(theme):
@@ -404,6 +406,36 @@ def get_theme_css(theme):
             background-color: #5568d3 !important;
         }
         
+        /* Download button - Light theme specific */
+        [data-testid="stDownloadButton"] > button {
+            background-color: #667eea !important;
+            color: #ffffff !important;
+            border: none !important;
+        }
+        
+        [data-testid="stDownloadButton"] > button:hover {
+            background-color: #5568d3 !important;
+            color: #ffffff !important;
+        }
+        
+        /* All buttons in light mode */
+        button[kind="secondary"],
+        button[kind="primary"],
+        .stDownloadButton > button,
+        .stDownloadButton button {
+            background-color: #667eea !important;
+            color: #ffffff !important;
+            border: none !important;
+        }
+        
+        button[kind="secondary"]:hover,
+        button[kind="primary"]:hover,
+        .stDownloadButton > button:hover,
+        .stDownloadButton button:hover {
+            background-color: #5568d3 !important;
+            color: #ffffff !important;
+        }
+        
         /* Ensure all input text is visible - More specific */
         input[type="text"],
         input[type="search"],
@@ -465,23 +497,229 @@ def get_theme_css(theme):
         
         /* Metrics */
         [data-testid="stMetricValue"] {
-            color: var(--text-primary) !important;
+            color: #1e293b !important;
         }
         
         [data-testid="stMetricLabel"] {
-            color: var(--text-secondary) !important;
+            color: #64748b !important;
         }
         
-        /* Dataframe */
+        /* Dataframe - Light mode specific */
         .dataframe {
-            background-color: var(--bg-card) !important;
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        
+        .dataframe th {
+            background-color: #f8fafc !important;
+            color: #000000 !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        
+        .dataframe td {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        
+        .dataframe thead th {
+            background-color: #f8fafc !important;
+            color: #000000 !important;
+        }
+        
+        .dataframe tbody tr {
+            background-color: #ffffff !important;
+        }
+        
+        .dataframe tbody tr:hover {
+            background-color: #f8fafc !important;
+        }
+        
+        /* Streamlit dataframe specific - Light mode */
+        [data-testid="stDataFrame"] {
+            background-color: #ffffff !important;
+        }
+        
+        [data-testid="stDataFrame"] > div {
+            background-color: #ffffff !important;
+        }
+        
+        [data-testid="stDataFrame"] table {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        
+        [data-testid="stDataFrame"] th {
+            background-color: #f8fafc !important;
+            color: #000000 !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        
+        [data-testid="stDataFrame"] td {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        
+        [data-testid="stDataFrame"] thead th {
+            background-color: #f8fafc !important;
+            color: #000000 !important;
+        }
+        
+        [data-testid="stDataFrame"] tbody tr {
+            background-color: #ffffff !important;
+        }
+        
+        [data-testid="stDataFrame"] tbody tr:hover {
+            background-color: #f8fafc !important;
+        }
+        
+        /* Override any dark mode styles for dataframes in light mode */
+        [data-testid="stDataFrame"] * {
+            color: #000000 !important;
+        }
+        
+        [data-testid="stDataFrame"] th *,
+        [data-testid="stDataFrame"] td * {
+            color: #000000 !important;
+        }
+        
+        /* Additional dataframe overrides to prevent dark mode */
+        [data-testid="stDataFrame"] .table-container {
+            background-color: #ffffff !important;
+        }
+        
+        [data-testid="stDataFrame"] .table {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        
+        /* Ensure all table elements are light in light mode */
+        div[data-testid="stDataFrame"] {
+            background-color: #ffffff !important;
+        }
+        
+        div[data-testid="stDataFrame"] > div {
+            background-color: #ffffff !important;
+        }
+        
+        div[data-testid="stDataFrame"] table {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        
+        div[data-testid="stDataFrame"] thead {
+            background-color: #f8fafc !important;
+        }
+        
+        div[data-testid="stDataFrame"] tbody {
+            background-color: #ffffff !important;
+        }
+        
+        div[data-testid="stDataFrame"] tr {
+            background-color: #ffffff !important;
+        }
+        
+        div[data-testid="stDataFrame"] tr:nth-child(even) {
+            background-color: #ffffff !important;
+        }
+        
+        div[data-testid="stDataFrame"] tr:hover {
+            background-color: #f8fafc !important;
         }
         
         /* Tech badge */
         .tech-badge {
             background: #f1f5f9 !important;
             color: #475569 !important;
-            border: 1px solid var(--border-color) !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        
+        /* Tables */
+        table {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        table th {
+            background-color: #f8fafc !important;
+            color: #1e293b !important;
+        }
+        
+        table td {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        /* Code blocks and inline code (for space keys like `SD`) */
+        code {
+            background-color: #f1f5f9 !important;
+            color: #1e293b !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        
+        pre {
+            background-color: #f8fafc !important;
+            color: #1e293b !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        
+        /* Plotly charts - light mode */
+        .js-plotly-plot {
+            background-color: #ffffff !important;
+        }
+        
+        .plotly {
+            background-color: #ffffff !important;
+        }
+        
+        .plotly .modebar {
+            background-color: #ffffff !important;
+        }
+        
+        /* Selectbox dropdown */
+        [data-baseweb="select"] {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        /* Expander */
+        [data-testid="stExpander"] {
+            background-color: #ffffff !important;
+        }
+        
+        [data-testid="stExpander"] > div {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+        
+        /* Radio buttons */
+        [data-testid="stRadio"] label {
+            color: #1e293b !important;
+        }
+        
+        /* Caption text */
+        .stCaption {
+            color: #64748b !important;
+        }
+        
+        /* Markdown text */
+        .stMarkdown {
+            color: #1e293b !important;
+        }
+        
+        .stMarkdown p {
+            color: #1e293b !important;
+        }
+        
+        .stMarkdown strong {
+            color: #1e293b !important;
+        }
+        
+        /* Code blocks */
+        .stCodeBlock {
+            background-color: #f8fafc !important;
+            color: #1e293b !important;
         }
         </style>
         """
@@ -489,51 +727,52 @@ def get_theme_css(theme):
 # Apply theme CSS
 st.markdown(get_theme_css(st.session_state.theme), unsafe_allow_html=True)
 
-# Additional shared CSS
-st.markdown("""
+# Additional shared CSS - theme-aware
+theme_bg_card = '#ffffff' if st.session_state.theme == 'light' else '#1e293b'
+shared_css = """
     <style>
     /* Professional gap cards */
-    .gap-card {
+    .gap-card {{
         padding: 1.5rem;
         border-radius: 10px;
         border-left: 5px solid;
         margin: 1rem 0;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         transition: all 0.3s ease;
-    }
+    }}
     
-    .gap-card:hover {
+    .gap-card:hover {{
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
         transform: translateY(-2px);
-    }
+    }}
     
-    .gap-high {
+    .gap-high {{
         border-left-color: #ef4444;
-        background: linear-gradient(90deg, rgba(239, 68, 68, 0.05) 0%, var(--bg-card) 100%);
-    }
+        background: linear-gradient(90deg, rgba(239, 68, 68, 0.05) 0%, {theme_bg} 100%);
+    }}
     
-    .gap-medium {
+    .gap-medium {{
         border-left-color: #f59e0b;
-        background: linear-gradient(90deg, rgba(245, 158, 11, 0.05) 0%, var(--bg-card) 100%);
-    }
+        background: linear-gradient(90deg, rgba(245, 158, 11, 0.05) 0%, {theme_bg} 100%);
+    }}
     
-    .gap-low {
+    .gap-low {{
         border-left-color: #10b981;
-        background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, var(--bg-card) 100%);
-    }
+        background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, {theme_bg} 100%);
+    }}
     
     /* Tech badge styling */
-    .tech-badge {
+    .tech-badge {{
         display: inline-block;
         padding: 0.35rem 0.85rem;
         border-radius: 6px;
         font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
         font-size: 0.8rem;
         font-weight: 500;
-    }
+    }}
     
     /* Status indicators */
-    .status-online {
+    .status-online {{
         display: inline-block;
         width: 10px;
         height: 10px;
@@ -541,9 +780,9 @@ st.markdown("""
         border-radius: 50%;
         margin-right: 0.5rem;
         box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-    }
+    }}
     
-    .status-offline {
+    .status-offline {{
         display: inline-block;
         width: 10px;
         height: 10px;
@@ -551,70 +790,71 @@ st.markdown("""
         border-radius: 50%;
         margin-right: 0.5rem;
         box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
-    }
+    }}
     
     /* Answer container */
-    .answer-container {
+    .answer-container {{
         padding: 1.75rem;
         border-radius: 10px;
         margin: 1.5rem 0;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         line-height: 1.7;
-    }
+    }}
     
     /* Professional buttons */
-    .stButton > button {
+    .stButton > button {{
         border-radius: 8px;
         border: none;
         padding: 0.6rem 1.75rem;
         font-weight: 500;
         transition: all 0.2s ease;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
+    }}
     
-    .stButton > button:hover {
+    .stButton > button:hover {{
         transform: translateY(-1px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
+    }}
     
     /* Input fields */
-    .stTextInput > div > div > input {
+    .stTextInput > div > div > input {{
         border-radius: 8px;
         padding: 0.75rem 1rem;
         font-size: 0.95rem;
-    }
+    }}
     
-    .stTextInput > div > div > input:focus {
+    .stTextInput > div > div > input:focus {{
         box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
+    }}
     
     /* Metrics styling */
-    [data-testid="stMetricValue"] {
+    [data-testid="stMetricValue"] {{
         font-size: 2rem;
         font-weight: 700;
-    }
+    }}
     
-    [data-testid="stMetricLabel"] {
+    [data-testid="stMetricLabel"] {{
         font-size: 0.9rem;
         font-weight: 500;
-    }
+    }}
     
     /* Divider styling */
-    hr {
+    hr {{
         margin: 2rem 0;
         border: none;
         border-top: 1px solid var(--border-color);
-    }
+    }}
     
     /* Theme toggle button positioning */
-    .theme-toggle-container {
+    .theme-toggle-container {{
         position: fixed;
         top: 20px;
         right: 20px;
         z-index: 999;
-    }
+    }}
     </style>
-""", unsafe_allow_html=True)
+""".format(theme_bg=theme_bg_card)
+st.markdown(shared_css, unsafe_allow_html=True)
 
 
 @st.cache_data(ttl=60)
@@ -695,15 +935,17 @@ def main():
         st.markdown('<div class="main-header">Sentinel Knowledge</div>', unsafe_allow_html=True)
     
     with header_col2:
-        # Theme toggle button
+        # Theme toggle button - preserve current page
         current_theme = st.session_state.theme
         if current_theme == 'light':
             if st.button("🌙", key="theme_toggle", help="Switch to dark theme", use_container_width=True):
                 st.session_state.theme = 'dark'
+                # Preserve current page when changing theme
                 st.rerun()
         else:
             if st.button("☀️", key="theme_toggle", help="Switch to light theme", use_container_width=True):
                 st.session_state.theme = 'light'
+                # Preserve current page when changing theme
                 st.rerun()
     
     # Sub-header
@@ -714,12 +956,18 @@ def main():
     # Sidebar
     with st.sidebar:
         st.markdown("### Navigation")
+        # Get page index from session state to preserve selection
+        page_options = ["Dashboard", "Query Interface", "Gap Analysis", "Confluence"]
+        current_index = page_options.index(st.session_state.current_page) if st.session_state.current_page in page_options else 0
         page = st.radio(
             "Select Page",
-            ["Dashboard", "Query Interface", "Gap Analysis", "Confluence"],
-            index=0,
+            page_options,
+            index=current_index,
             label_visibility="collapsed"
         )
+        # Update session state when page changes
+        if page != st.session_state.current_page:
+            st.session_state.current_page = page
         
         st.divider()
         
@@ -788,11 +1036,19 @@ def main():
                     names=list(gap_types.keys()),
                     color_discrete_sequence=['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe']
                 )
+                # Theme-aware layout
+                bg_color = '#ffffff' if st.session_state.theme == 'light' else '#1e293b'
+                text_color = '#000000' if st.session_state.theme == 'light' else '#f1f5f9'
                 fig.update_layout(
                     showlegend=True,
                     margin=dict(l=20, r=20, t=20, b=20),
-                    font=dict(size=12),
-                    height=350
+                    font=dict(size=12, color=text_color),
+                    height=350,
+                    plot_bgcolor=bg_color,
+                    paper_bgcolor=bg_color,
+                    legend=dict(font=dict(color=text_color)),
+                    xaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color)),
+                    yaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color))
                 )
                 st.plotly_chart(fig, use_container_width=True)
             else:
@@ -809,11 +1065,18 @@ def main():
                     color=list(severity.keys()),
                     color_discrete_map={"high": "#ef4444", "medium": "#f59e0b", "low": "#10b981"}
                 )
+                # Theme-aware layout
+                bg_color = '#ffffff' if st.session_state.theme == 'light' else '#1e293b'
+                text_color = '#000000' if st.session_state.theme == 'light' else '#f1f5f9'
                 fig.update_layout(
                     showlegend=False,
                     margin=dict(l=20, r=20, t=20, b=20),
-                    font=dict(size=12),
-                    height=350
+                    font=dict(size=12, color=text_color),
+                    height=350,
+                    plot_bgcolor=bg_color,
+                    paper_bgcolor=bg_color,
+                    xaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color)),
+                    yaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color))
                 )
                 st.plotly_chart(fig, use_container_width=True)
             else:
@@ -1219,7 +1482,20 @@ def main():
                         names=gap_type_counts.index,
                         color_discrete_sequence=px.colors.qualitative.Set3
                     )
-                    fig.update_layout(showlegend=True, margin=dict(l=20, r=20, t=20, b=20), height=350)
+                    # Theme-aware layout
+                    bg_color = '#ffffff' if st.session_state.theme == 'light' else '#1e293b'
+                    text_color = '#000000' if st.session_state.theme == 'light' else '#f1f5f9'
+                    fig.update_layout(
+                        showlegend=True, 
+                        margin=dict(l=20, r=20, t=20, b=20), 
+                        height=350,
+                        plot_bgcolor=bg_color,
+                        paper_bgcolor=bg_color,
+                        font=dict(color=text_color),
+                        legend=dict(font=dict(color=text_color)),
+                        xaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color)),
+                        yaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color))
+                    )
                     st.plotly_chart(fig, use_container_width=True)
                 else:
                     st.info("No gap type data available")
@@ -1236,7 +1512,19 @@ def main():
                         color_discrete_map={"high": "#ef4444", "medium": "#f59e0b", "low": "#10b981"},
                         labels={"x": "Priority Score", "y": ""}
                     )
-                    fig.update_layout(showlegend=False, margin=dict(l=20, r=20, t=20, b=20), height=350)
+                    # Theme-aware layout
+                    bg_color = '#ffffff' if st.session_state.theme == 'light' else '#1e293b'
+                    text_color = '#000000' if st.session_state.theme == 'light' else '#f1f5f9'
+                    fig.update_layout(
+                        showlegend=False, 
+                        margin=dict(l=20, r=20, t=20, b=20), 
+                        height=350,
+                        plot_bgcolor=bg_color,
+                        paper_bgcolor=bg_color,
+                        font=dict(color=text_color),
+                        xaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color)),
+                        yaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color))
+                    )
                     st.plotly_chart(fig, use_container_width=True)
             
             # Action Items
