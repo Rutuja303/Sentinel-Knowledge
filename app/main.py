@@ -346,6 +346,38 @@ async def get_gap_statistics():
     """Get statistics about knowledge gaps"""
     try:
         stats = gap_detector.get_query_statistics()
+        
+        # Add unique Confluence file count
+        if embedding_service is None:
+            initialize_services()
+        
+        confluence_file_count = 0
+        if embedding_service:
+            try:
+                # Get Confluence documents and count unique files/pages
+                confluence_docs = embedding_service.get_confluence_documents(limit=50000)
+                unique_files = set()
+                for metadata in confluence_docs.get("metadatas", []):
+                    # Check multiple fields to get the file/page title
+                    title = (metadata.get("title") or 
+                            metadata.get("page_title") or 
+                            metadata.get("name") or
+                            metadata.get("filename"))
+                    if title:
+                        unique_files.add(title)
+                confluence_file_count = len(unique_files)
+            except Exception as e:
+                print(f"Error counting Confluence files: {e}")
+        
+        stats["total_confluence_files"] = confluence_file_count
+        
+        # Update gap_rate to be gaps / total files (as decimal, not percentage)
+        total_gaps = stats.get("total_gaps", 0)
+        if confluence_file_count > 0:
+            stats["gap_rate"] = total_gaps / confluence_file_count
+        else:
+            stats["gap_rate"] = 0.0
+        
         return stats
     
     except Exception as e:

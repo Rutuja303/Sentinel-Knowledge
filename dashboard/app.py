@@ -887,6 +887,20 @@ def fetch_statistics():
     except:
         return {}
 
+@st.cache_data(ttl=300)
+def fetch_confluence_file_count():
+    """Fetch the number of unique files scanned from Confluence"""
+    try:
+        # Get stats which now includes total_confluence_files
+        response = requests.get(f"{API_BASE_URL}/gaps/stats", timeout=5)
+        if response.status_code == 200:
+            stats = response.json()
+            return stats.get("total_confluence_files", 0)
+        return 0
+    except Exception as e:
+        print(f"Error fetching Confluence file count: {e}")
+        return 0
+
 
 @st.cache_data(ttl=300)
 def fetch_suggested_questions(num_questions: int = 15):
@@ -1010,8 +1024,8 @@ def main():
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            total_queries = stats.get("total_queries", 0) if stats else 0
-            st.metric("Total Queries", f"{total_queries:,}")
+            total_files = fetch_confluence_file_count()
+            st.metric("Total Files Scanned", f"{total_files:,}")
         
         with col2:
             total_gaps = stats.get("total_gaps", 0) if stats else 0
@@ -1019,7 +1033,7 @@ def main():
         
         with col3:
             gap_rate = stats.get("gap_rate", 0) if stats else 0
-            st.metric("Gap Rate", f"{gap_rate:.1%}" if gap_rate > 0 else "0%")
+            st.metric("Gap Rate", f"{gap_rate:.2f}" if gap_rate > 0 else "0.00")
         
         with col4:
             high_severity = stats.get("severity_breakdown", {}).get("high", 0) if stats else 0
@@ -1054,8 +1068,8 @@ def main():
                     plot_bgcolor=bg_color,
                     paper_bgcolor=bg_color,
                     legend=dict(font=dict(color=text_color)),
-                    xaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color)),
-                    yaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color))
+                    xaxis=dict(tickfont=dict(color=text_color), title=dict(font=dict(color=text_color))),
+                    yaxis=dict(tickfont=dict(color=text_color), title=dict(font=dict(color=text_color)))
                 )
                 st.plotly_chart(fig, use_container_width=True)
             else:
@@ -1082,8 +1096,8 @@ def main():
                     height=350,
                     plot_bgcolor=bg_color,
                     paper_bgcolor=bg_color,
-                    xaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color)),
-                    yaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color))
+                    xaxis=dict(tickfont=dict(color=text_color), title=dict(font=dict(color=text_color))),
+                    yaxis=dict(tickfont=dict(color=text_color), title=dict(font=dict(color=text_color)))
                 )
                 st.plotly_chart(fig, use_container_width=True)
             else:
@@ -1556,8 +1570,8 @@ def main():
                         paper_bgcolor=bg_color,
                         font=dict(color=text_color),
                         legend=dict(font=dict(color=text_color)),
-                        xaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color)),
-                        yaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color))
+                        xaxis=dict(tickfont=dict(color=text_color), title=dict(font=dict(color=text_color))),
+                        yaxis=dict(tickfont=dict(color=text_color), title=dict(font=dict(color=text_color)))
                     )
                     st.plotly_chart(fig, use_container_width=True)
                 else:
@@ -1585,18 +1599,18 @@ def main():
                         plot_bgcolor=bg_color,
                         paper_bgcolor=bg_color,
                         font=dict(color=text_color),
-                        xaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color)),
-                        yaxis=dict(tickfont=dict(color=text_color), titlefont=dict(color=text_color))
+                        xaxis=dict(tickfont=dict(color=text_color), title=dict(font=dict(color=text_color))),
+                        yaxis=dict(tickfont=dict(color=text_color), title=dict(font=dict(color=text_color)))
                     )
                     st.plotly_chart(fig, use_container_width=True)
             
             # Action Items
             st.divider()
-            st.markdown("### Recommended Action Items")
+            st.markdown("### Actions Needed")
             
-            high_priority_gaps = df[df["priority_score"] >= 6].head(5)
-            if len(high_priority_gaps) > 0:
-                for idx, gap in high_priority_gaps.iterrows():
+            high_severity_gaps = df[df["severity"] == "high"].head(10)
+            if len(high_severity_gaps) > 0:
+                for idx, gap in high_severity_gaps.iterrows():
                     with st.expander(f"Priority {int(gap['priority_score'])}: {gap['query'][:70]}..."):
                         col1, col2 = st.columns(2)
                         with col1:
@@ -1618,7 +1632,7 @@ def main():
                         else:
                             st.info(f"**Enhance documentation** related to: {gap.get('suggested_topic', 'this topic')}")
             else:
-                st.success("**No high-priority gaps** requiring immediate attention!")
+                st.success("**No high severity gaps** requiring immediate attention!")
         else:
             st.warning("**No knowledge gaps detected yet.**")
             st.markdown("""
