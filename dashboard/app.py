@@ -1035,6 +1035,9 @@ def main():
             st.markdown("#### Gap Type Distribution")
             if stats and stats.get("gap_types"):
                 gap_types = stats.get("gap_types", {})
+                # Ensure gap_types is a regular dict, not defaultdict
+                if isinstance(gap_types, dict):
+                    gap_types = dict(gap_types)
                 fig = px.pie(
                     values=list(gap_types.values()),
                     names=list(gap_types.keys()),

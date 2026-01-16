@@ -308,9 +308,13 @@ class GapDetectorService:
         total_queries = len(self.query_history)
         total_gaps = len(self.gaps)
         
+        # Use regular dict, not defaultdict, to avoid most_common() errors
         gap_types = {}
         for gap in self.gaps.values():
             gap_types[gap.gap_type] = gap_types.get(gap.gap_type, 0) + 1
+        
+        # Convert to regular dict to ensure it's not a defaultdict
+        gap_types = dict(gap_types)
         
         return {
             "total_queries": total_queries,
