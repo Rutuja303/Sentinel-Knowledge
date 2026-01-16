@@ -696,6 +696,11 @@ async def analyze_all_confluence_data(request: AnalyzeConfluenceRequest = Analyz
                 confluence_patterns = ["Missing schema", "Inconsistent", "Undefined entities", "sentiment mart", "mart", "schema"]
                 if any(pattern.lower() in gap.query.lower() for pattern in confluence_patterns):
                     is_confluence_gap = True
+            # Also remove gaps with no source information that look like they're from old question-based detection
+            elif not gap.source_page_id and not gap.source_page_title and not gap.source_document:
+                # If it's a repeated_query or has question-like format, it's likely from old detection
+                if gap.gap_type == "repeated_query" or gap.query.startswith(("What", "How", "When", "Where", "Why", "Who")):
+                    is_confluence_gap = True
             
             if is_confluence_gap:
                 confluence_gap_ids.append(gap_id)

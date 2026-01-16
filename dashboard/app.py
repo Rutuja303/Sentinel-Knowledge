@@ -858,8 +858,12 @@ st.markdown(shared_css, unsafe_allow_html=True)
 
 
 @st.cache_data(ttl=60)
-def fetch_gaps(severity: str = None, limit: int = 20):
-    """Fetch knowledge gaps from API"""
+def fetch_gaps(severity: str = None, limit: int = 20, _cache_key: str = None):
+    """Fetch knowledge gaps from API
+    
+    Args:
+        _cache_key: Optional cache key to force refresh (pass timestamp to invalidate cache)
+    """
     try:
         params = {"limit": limit}
         if severity:
@@ -1151,18 +1155,58 @@ def main():
                 for idx, suggested_q in enumerate(suggested_questions):
                     col_idx = idx % num_cols
                     with cols[col_idx]:
-                        button_text = suggested_q if len(suggested_q) <= 60 else suggested_q[:57] + "..."
-                        if st.button(button_text, key=f"suggest_{idx}", use_container_width=True):
-                            st.session_state['selected_question'] = suggested_q
-                            st.rerun()
+                        # Create a unique key for expand/collapse state
+                        expand_key = f"expand_q_{idx}"
+                        if expand_key not in st.session_state:
+                            st.session_state[expand_key] = False
+                        
+                        # Show truncated or full text based on length
+                        is_long = len(suggested_q) > 60
+                        display_text = suggested_q if not is_long or st.session_state[expand_key] else suggested_q[:57] + "..."
+                        
+                        # Create a styled container for the question
+                        with st.container():
+                            # Show the question text
+                            if is_long:
+                                # Long question - show with expand/collapse
+                                col_text, col_expand = st.columns([5, 1])
+                                with col_text:
+                                    st.markdown(f"**{display_text}**")
+                                with col_expand:
+                                    expand_icon = "▼" if st.session_state[expand_key] else "▶"
+                                    if st.button(expand_icon, key=f"expand_btn_{idx}", use_container_width=True, help="Click to expand/collapse"):
+                                        st.session_state[expand_key] = not st.session_state[expand_key]
+                                        st.rerun()
+                                
+                                # Select button - only show full text when expanded
+                                if st.session_state[expand_key]:
+                                    if st.button("✓ Select & Query", key=f"select_{idx}", use_container_width=True, type="primary"):
+                                        st.session_state['selected_question'] = suggested_q
+                                        st.session_state['question_input'] = suggested_q  # Directly update input field
+                                        st.session_state['auto_query'] = True
+                                        # Reset expand state
+                                        st.session_state[expand_key] = False
+                                        st.rerun()
+                            else:
+                                # Short question - just show button with full text
+                                if st.button(suggested_q, key=f"suggest_{idx}", use_container_width=True):
+                                    st.session_state['selected_question'] = suggested_q
+                                    st.session_state['question_input'] = suggested_q  # Directly update input field
+                                    st.session_state['auto_query'] = True
+                                    st.rerun()
         
         st.divider()
         
+        # Check if we should auto-execute query from suggested question click
+        auto_query = st.session_state.get('auto_query', False)
+        selected_question = st.session_state.get('selected_question', '')
+        
         # Query Input
         st.markdown("### Ask a Question")
+        # Get the question from input field (which is updated when question is selected)
         question = st.text_input(
             "Enter your question:",
-            value=st.session_state.get('selected_question', ''),
+            value=st.session_state.get('question_input', ''),
             placeholder="e.g., How do we handle deployment rollbacks?",
             key="question_input",
             label_visibility="collapsed"
@@ -1172,9 +1216,16 @@ def main():
         with col1:
             query_clicked = st.button("Query", type="primary", use_container_width=True)
         
+        # Auto-execute query if a suggested question was clicked
+        if auto_query and selected_question:
+            # Ensure question is set from selected_question
+            question = selected_question
+            st.session_state['auto_query'] = False  # Reset flag
+            query_clicked = True  # Trigger query execution
+        
         if query_clicked and question:
-            if 'selected_question' in st.session_state:
-                st.session_state['selected_question'] = ""
+            # Don't clear selected_question immediately - let it stay in the input
+            # Only clear it after the query is processed
             
             with st.spinner("Analyzing knowledge base..."):
                 result = query_knowledge_base(question)
@@ -1297,8 +1348,15 @@ def main():
                     with col4:
                         st.metric("Gaps Detected", analysis_data.get("gaps_detected", 0))
                     
-                    st.info("💡 **Scroll down to see all detected gaps below!**")
+                    # Clear cache and update cache key to force refresh of gaps table
+                    fetch_gaps.clear()  # Clear the specific cache for gaps
+                    st.cache_data.clear()  # Clear all caches
+                    # Update cache key to force refresh
+                    st.session_state["gaps_cache_key"] = str(datetime.now().timestamp())
+                    st.info("💡 **Gaps table will refresh below with latest results!**")
                     st.session_state["analyze_confluence"] = False
+                    # Trigger rerun to refresh the gaps table
+                    st.rerun()
                 else:
                     progress_bar.empty()
                     status_text.empty()
@@ -1394,7 +1452,9 @@ def main():
             search_query = st.text_input("Search", placeholder="Search gaps by query text...", label_visibility="collapsed")
         
         # Fetch and filter gaps from entire collection
-        all_gaps = fetch_gaps(limit=1000)
+        # Use cache key from session state to force refresh after analysis
+        cache_key = st.session_state.get("gaps_cache_key", "default")
+        all_gaps = fetch_gaps(limit=1000, _cache_key=cache_key)
         
         if all_gaps and len(all_gaps) > 0:
             df = pd.DataFrame(all_gaps)
